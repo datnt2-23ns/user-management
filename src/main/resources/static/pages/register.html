@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Đăng ký</title>
+
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+
+<div data-app-header></div>
+
+<main class="auth-container">
+    <section class="card">
+        <h1 class="card__title">Đăng ký tài khoản</h1>
+
+        <div id="message" class="message"></div>
+
+        <form id="register-form">
+            <div class="form-group">
+                <label class="form-label" for="fullName">
+                    Họ và tên
+                </label>
+
+                <input
+                        class="form-control"
+                        id="fullName"
+                        name="fullName"
+                        type="text"
+                        required
+                >
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="email">
+                    Email
+                </label>
+
+                <input
+                        class="form-control"
+                        id="email"
+                        name="email"
+                        type="email"
+                        autocomplete="email"
+                        required
+                >
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">
+                    Mật khẩu
+                </label>
+
+                <input
+                        class="form-control"
+                        id="password"
+                        name="password"
+                        type="password"
+                        autocomplete="new-password"
+                        required
+                >
+            </div>
+
+            <button class="btn btn-primary btn-block" type="submit">
+                Đăng ký
+            </button>
+        </form>
+
+        <p class="text-center text-muted">
+            Đã có tài khoản?
+            <a href="/pages/login.html">Đăng nhập</a>
+        </p>
+    </section>
+</main>
+
+<div data-app-footer></div>
+
+<script src="/js/layout.js"></script>
+</body>
+</html>
