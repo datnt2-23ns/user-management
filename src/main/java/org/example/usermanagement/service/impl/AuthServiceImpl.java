@@ -21,6 +21,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 
 import java.util.Locale;
 
@@ -115,6 +117,10 @@ public class AuthServiceImpl implements AuthService {
                                             request.getPassword()
                                     )
                     );
+        } catch (LockedException exception) {
+            throw exception;
+        } catch (DisabledException exception) {
+            throw exception;
         } catch (AuthenticationException exception) {
             throw new InvalidCredentialsException(
                     "Email hoặc mật khẩu không đúng"

@@ -15,9 +15,12 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.example.usermanagement.security.JwtAccessDeniedHandler;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
@@ -25,7 +28,8 @@ public class SecurityConfig {
             HttpSecurity http,
             DaoAuthenticationProvider authenticationProvider,
             JwtAuthenticationFilter jwtAuthenticationFilter,
-            JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint
+            JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+            JwtAccessDeniedHandler jwtAccessDeniedHandler
     ) throws Exception {
 
         http
@@ -43,9 +47,12 @@ public class SecurityConfig {
 
                 .authenticationProvider(authenticationProvider)
 
-                .exceptionHandling(exception ->
-                        exception.authenticationEntryPoint(
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(
                                 jwtAuthenticationEntryPoint
+                        )
+                        .accessDeniedHandler(
+                                jwtAccessDeniedHandler
                         )
                 )
 
@@ -71,8 +78,18 @@ public class SecurityConfig {
                                 "/api/auth/login"
                         ).permitAll()
 
-                        .requestMatchers("/api/admin/**")
-                        .hasRole("ADMIN")
+                        .requestMatchers(
+                                "/api/admin/**"
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers(
+                                "/api/users/me",
+                                "/api/users/me/**",
+                                "/api/profile/**"
+                        ).hasAnyRole(
+                                "USER",
+                                "ADMIN"
+                        )
 
                         .anyRequest()
                         .authenticated()

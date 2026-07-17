@@ -31,6 +31,9 @@ public class JwtAuthenticationFilter
     public static final String JWT_ERROR_ATTRIBUTE =
             "jwtError";
 
+    public static final String ACCOUNT_FORBIDDEN_ATTRIBUTE =
+            "accountForbidden";
+
     private final JwtUtils jwtUtils;
     private final UserDetailsService userDetailsService;
 
@@ -63,6 +66,30 @@ public class JwtAuthenticationFilter
                 UserDetails userDetails =
                         userDetailsService
                                 .loadUserByUsername(email);
+
+                if (!userDetails.isAccountNonLocked()) {
+                    SecurityContextHolder.clearContext();
+
+                    request.setAttribute(
+                            ACCOUNT_FORBIDDEN_ATTRIBUTE,
+                            "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên"
+                    );
+
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
+                if (!userDetails.isEnabled()) {
+                    SecurityContextHolder.clearContext();
+
+                    request.setAttribute(
+                            ACCOUNT_FORBIDDEN_ATTRIBUTE,
+                            "Tài khoản không còn hoạt động"
+                    );
+
+                    filterChain.doFilter(request, response);
+                    return;
+                }
 
                 if (jwtUtils.isTokenValid(
                         token,

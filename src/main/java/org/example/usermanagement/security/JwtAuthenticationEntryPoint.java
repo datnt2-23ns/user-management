@@ -28,32 +28,44 @@ public class JwtAuthenticationEntryPoint
             AuthenticationException authenticationException
     ) throws IOException {
 
-        Object jwtError = request.getAttribute(
-                JwtAuthenticationFilter.JWT_ERROR_ATTRIBUTE
-        );
+        Object accountForbidden =
+                request.getAttribute(
+                        JwtAuthenticationFilter
+                                .ACCOUNT_FORBIDDEN_ATTRIBUTE
+                );
 
-        String message = jwtError instanceof String
-                ? jwtError.toString()
-                : "Bạn chưa đăng nhập hoặc token không hợp lệ";
+        Object jwtError =
+                request.getAttribute(
+                        JwtAuthenticationFilter
+                                .JWT_ERROR_ATTRIBUTE
+                );
+
+        HttpStatus status;
+        String message;
+
+        if (accountForbidden instanceof String forbiddenMessage) {
+            status = HttpStatus.FORBIDDEN;
+            message = forbiddenMessage;
+        } else {
+            status = HttpStatus.UNAUTHORIZED;
+
+            message = jwtError instanceof String jwtMessage
+                    ? jwtMessage
+                    : "Bạn chưa đăng nhập hoặc token không hợp lệ";
+        }
 
         ApiErrorResponse responseBody =
                 ApiErrorResponse.builder()
-                        .status(
-                                HttpStatus.UNAUTHORIZED.value()
-                        )
+                        .status(status.value())
                         .message(message)
                         .timestamp(LocalDateTime.now())
                         .errors(null)
                         .build();
 
-        response.setStatus(
-                HttpStatus.UNAUTHORIZED.value()
-        );
-
+        response.setStatus(status.value());
         response.setContentType(
                 MediaType.APPLICATION_JSON_VALUE
         );
-
         response.setCharacterEncoding("UTF-8");
 
         objectMapper.writeValue(

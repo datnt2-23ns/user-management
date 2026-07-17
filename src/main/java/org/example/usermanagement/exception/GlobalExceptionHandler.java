@@ -11,6 +11,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -110,9 +112,61 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidCredentials(
+            InvalidCredentialsException exception
+    ) {
+        ApiErrorResponse response =
+                ApiErrorResponse.builder()
+                        .status(HttpStatus.UNAUTHORIZED.value())
+                        .message(exception.getMessage())
+                        .timestamp(LocalDateTime.now())
+                        .errors(null)
+                        .build();
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(response);
+    }
+
+    @ExceptionHandler(LockedException.class)
+    public ResponseEntity<ApiErrorResponse> handleLockedAccount(
+            LockedException exception
+    ) {
+        ApiErrorResponse response =
+                ApiErrorResponse.builder()
+                        .status(HttpStatus.FORBIDDEN.value())
+                        .message(
+                                "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên"
+                        )
+                        .timestamp(LocalDateTime.now())
+                        .errors(null)
+                        .build();
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(response);
+    }
+
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ApiErrorResponse> handleDisabledAccount(
+            DisabledException exception
+    ) {
+        ApiErrorResponse response =
+                ApiErrorResponse.builder()
+                        .status(HttpStatus.FORBIDDEN.value())
+                        .message("Tài khoản không còn hoạt động")
+                        .timestamp(LocalDateTime.now())
+                        .errors(null)
+                        .build();
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(response);
+    }
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiErrorResponse>
-    handleUnexpectedException(
+    public ResponseEntity<ApiErrorResponse> handleUnexpectedException(
             Exception exception
     ) {
         log.error(
@@ -122,9 +176,7 @@ public class GlobalExceptionHandler {
 
         ApiErrorResponse response =
                 ApiErrorResponse.builder()
-                        .status(
-                                HttpStatus.INTERNAL_SERVER_ERROR.value()
-                        )
+                        .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                         .message(
                                 "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau"
                         )
@@ -134,26 +186,6 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(response);
-    }
-
-    @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<ApiErrorResponse>
-    handleInvalidCredentials(
-            InvalidCredentialsException exception
-    ) {
-        ApiErrorResponse response =
-                ApiErrorResponse.builder()
-                        .status(
-                                HttpStatus.UNAUTHORIZED.value()
-                        )
-                        .message(exception.getMessage())
-                        .timestamp(LocalDateTime.now())
-                        .errors(null)
-                        .build();
-
-        return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
                 .body(response);
     }
 }
