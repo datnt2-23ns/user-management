@@ -16,14 +16,18 @@ export async function apiRequest(endpoint, options = {}) {
         headers.Authorization = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        ...options,
-        headers
-    });
+    const response = await fetch(
+        `${API_BASE_URL}${endpoint}`,
+        {
+            ...options,
+            headers
+        }
+    );
 
-    const contentType = response.headers.get("content-type") || "";
+    const contentType =
+        response.headers.get("content-type") || "";
 
-    let responseBody;
+    let responseBody = null;
 
     if (contentType.includes("application/json")) {
         responseBody = await response.json();
@@ -33,8 +37,10 @@ export async function apiRequest(endpoint, options = {}) {
 
     if (!response.ok) {
         const error = new Error("API request failed");
+
         error.status = response.status;
         error.data = responseBody;
+
         throw error;
     }
 
