@@ -1,9 +1,8 @@
 package org.example.usermanagement.exception;
 
-import org.example.usermanagement.dto.response.ApiErrorResponse;
-
 import lombok.extern.slf4j.Slf4j;
-
+import org.example.usermanagement.dto.response.ApiErrorResponse;
+import org.example.usermanagement.exception.InvalidCredentialsException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -135,6 +134,26 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(response);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiErrorResponse>
+    handleInvalidCredentials(
+            InvalidCredentialsException exception
+    ) {
+        ApiErrorResponse response =
+                ApiErrorResponse.builder()
+                        .status(
+                                HttpStatus.UNAUTHORIZED.value()
+                        )
+                        .message(exception.getMessage())
+                        .timestamp(LocalDateTime.now())
+                        .errors(null)
+                        .build();
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
                 .body(response);
     }
 }

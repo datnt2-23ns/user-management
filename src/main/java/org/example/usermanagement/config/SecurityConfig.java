@@ -1,5 +1,7 @@
 package org.example.usermanagement.config;
 
+import org.example.usermanagement.security.JwtAuthenticationEntryPoint;
+import org.example.usermanagement.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -12,6 +14,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -20,11 +23,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
-            DaoAuthenticationProvider authenticationProvider
+            DaoAuthenticationProvider authenticationProvider,
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint
     ) throws Exception {
 
         http
-
                 .csrf(csrf -> csrf.disable())
 
                 .sessionManagement(session ->
@@ -38,6 +42,12 @@ public class SecurityConfig {
                 .httpBasic(basic -> basic.disable())
 
                 .authenticationProvider(authenticationProvider)
+
+                .exceptionHandling(exception ->
+                        exception.authenticationEntryPoint(
+                                jwtAuthenticationEntryPoint
+                        )
+                )
 
                 .authorizeHttpRequests(authorize -> authorize
 
@@ -63,8 +73,14 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/admin/**")
                         .hasRole("ADMIN")
+
                         .anyRequest()
                         .authenticated()
+                )
+
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class
                 );
 
         return http.build();
@@ -76,9 +92,7 @@ public class SecurityConfig {
             PasswordEncoder passwordEncoder
     ) {
         DaoAuthenticationProvider provider =
-                new DaoAuthenticationProvider(
-                        userDetailsService
-                );
+                new DaoAuthenticationProvider(userDetailsService);
 
         provider.setPasswordEncoder(passwordEncoder);
 

@@ -1,13 +1,12 @@
 package org.example.usermanagement.controller;
 
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.example.usermanagement.dto.request.LoginRequest;
 import org.example.usermanagement.dto.request.RegisterRequest;
+import org.example.usermanagement.dto.response.LoginResponse;
 import org.example.usermanagement.dto.response.RegisterResponse;
 import org.example.usermanagement.service.AuthService;
-
-import jakarta.validation.Valid;
-
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,5 +31,14 @@ public class AuthController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(
+            @Valid @RequestBody LoginRequest request
+    ) {
+        return ResponseEntity.ok(
+                authService.login(request)
+        );
     }
 }

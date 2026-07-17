@@ -33,3 +33,7 @@ app:
     gender: ${ADMIN_GENDER:OTHER}
     address: ${ADMIN_ADDRESS:System}
     phone: ${ADMIN_PHONE:0000000000}
+
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration-ms: ${JWT_EXPIRATION_MS:3600000}
