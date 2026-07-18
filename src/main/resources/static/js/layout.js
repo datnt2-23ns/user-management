@@ -26,6 +26,9 @@ function createHeader() {
                     data-auth-user
                     hidden
                 >
+
+                    <a class="navbar__profile-link" href="/pages/profile.html">Hồ sơ</a>
+
                     <span class="navbar__welcome">
                         Xin chào,
                         <strong data-auth-name>

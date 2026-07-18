@@ -1,0 +1,25 @@
+<svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="240"
+        height="240"
+        viewBox="0 0 240 240"
+>
+    <rect
+            width="240"
+            height="240"
+            rx="120"
+            fill="#e5e7eb"
+    />
+
+    <circle
+            cx="120"
+            cy="88"
+            r="45"
+            fill="#9ca3af"
+    />
+
+    <path
+            d="M45 215c8-48 37-74 75-74s67 26 75 74"
+            fill="#9ca3af"
+    />
+</svg>

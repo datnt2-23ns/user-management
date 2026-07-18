@@ -165,3 +165,13 @@ a {
     color: #ffffff;
     cursor: pointer;
 }
+
+.navbar__profile-link {
+    color: #2563eb;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.navbar__profile-link:hover {
+    text-decoration: underline;
+}
