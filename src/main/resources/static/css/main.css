@@ -146,3 +146,22 @@ a {
   text-align: center;
   color: #6b7280;
 }
+
+[hidden] {
+    display: none !important;
+}
+
+.navbar__user {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.navbar__logout {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    background: #dc2626;
+    color: #ffffff;
+    cursor: pointer;
+}

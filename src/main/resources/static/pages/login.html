@@ -2,26 +2,43 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Đăng nhập</title>
 
     <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/login.css">
 </head>
 <body>
 
 <div data-app-header></div>
 
-<main class="auth-container">
-    <section class="card">
-        <h1 class="card__title">Đăng nhập</h1>
+<main class="login-page">
+    <section class="login-card">
+        <div class="login-heading">
+            <h1>Đăng nhập</h1>
 
-        <div id="message" class="message"></div>
+            <p>
+                Đăng nhập để tiếp tục sử dụng hệ thống.
+            </p>
+        </div>
 
-        <form id="login-form">
+        <div
+                id="form-message"
+                class="form-message"
+                role="alert"
+                aria-live="polite"
+        ></div>
+
+        <form id="login-form" novalidate>
             <div class="form-group">
                 <label class="form-label" for="email">
                     Email
+                    <span class="required">*</span>
                 </label>
 
                 <input
@@ -29,40 +46,79 @@
                         id="email"
                         name="email"
                         type="email"
+                        maxlength="320"
                         autocomplete="email"
-                        required
+                        placeholder="example@email.com"
                 >
+
+                <small
+                        id="email-error"
+                        class="field-error"
+                ></small>
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="password">
                     Mật khẩu
+                    <span class="required">*</span>
                 </label>
 
-                <input
-                        class="form-control"
-                        id="password"
-                        name="password"
-                        type="password"
-                        autocomplete="current-password"
-                        required
-                >
+                <div class="password-wrapper">
+                    <input
+                            class="form-control"
+                            id="password"
+                            name="password"
+                            type="password"
+                            maxlength="64"
+                            autocomplete="current-password"
+                            placeholder="Nhập mật khẩu"
+                    >
+
+                    <button
+                            id="toggle-password"
+                            class="toggle-password"
+                            type="button"
+                            aria-label="Hiển thị mật khẩu"
+                    >
+                        Hiện
+                    </button>
+                </div>
+
+                <small
+                        id="password-error"
+                        class="field-error"
+                ></small>
             </div>
 
-            <button class="btn btn-primary btn-block" type="submit">
+            <button
+                    id="login-button"
+                    class="btn btn-primary btn-block"
+                    type="submit"
+            >
                 Đăng nhập
             </button>
         </form>
 
-        <p class="text-center text-muted">
-            Chưa có tài khoản?
-            <a href="/pages/register.html">Đăng ký</a>
-        </p>
+        <div class="login-links">
+            <a href="/pages/forgot-password.html">
+                Quên mật khẩu?
+            </a>
+
+            <p>
+                Chưa có tài khoản?
+                <a href="/pages/register.html">
+                    Đăng ký
+                </a>
+            </p>
+        </div>
     </section>
 </main>
 
 <div data-app-footer></div>
 
 <script src="/js/layout.js"></script>
+<script type="module" src="/js/auth-ui.js"></script>
+<script type="module" src="/js/login.js"></script>
+
 </body>
 </html>

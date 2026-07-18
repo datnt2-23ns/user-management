@@ -1,47 +1,89 @@
+import {
+    clearAuthSession,
+    getAccessToken
+} from "/js/auth.js";
+
 const API_BASE_URL = "/api";
 
-export async function apiRequest(endpoint, options = {}) {
-    const token = localStorage.getItem("accessToken");
-    const isFormData = options.body instanceof FormData;
+export async function apiRequest(
+    endpoint,
+    options = {}
+) {
+    const token = getAccessToken();
+
+    const isFormData =
+        options.body instanceof FormData;
 
     const headers = {
         ...(options.headers || {})
     };
 
     if (!isFormData) {
-        headers["Content-Type"] = "application/json";
+        headers["Content-Type"] =
+            "application/json";
     }
 
     if (token) {
-        headers.Authorization = `Bearer ${token}`;
+        headers.Authorization =
+            `Bearer ${token}`;
     }
 
-    const response = await fetch(
-        `${API_BASE_URL}${endpoint}`,
-        {
-            ...options,
-            headers
-        }
-    );
+    let response;
+
+    try {
+        response = await fetch(
+            `${API_BASE_URL}${endpoint}`,
+            {
+                ...options,
+                headers
+            }
+        );
+    } catch (error) {
+        const networkError = new Error(
+            "Không thể kết nối đến máy chủ"
+        );
+
+        networkError.cause = error;
+        throw networkError;
+    }
 
     const contentType =
-        response.headers.get("content-type") || "";
+        response.headers.get("content-type")
+        || "";
 
     let responseBody = null;
 
-    if (contentType.includes("application/json")) {
-        responseBody = await response.json();
-    } else {
-        responseBody = await response.text();
+    if (response.status !== 204) {
+        if (
+            contentType.includes(
+                "application/json"
+            )
+        ) {
+            responseBody =
+                await response.json();
+        } else {
+            responseBody =
+                await response.text();
+        }
     }
 
     if (!response.ok) {
-        const error = new Error("API request failed");
+        if (
+            response.status === 401
+            && endpoint !== "/auth/login"
+        ) {
+            clearAuthSession();
+        }
 
-        error.status = response.status;
-        error.data = responseBody;
+        const apiError = new Error(
+            responseBody?.message
+            || "API request failed"
+        );
 
-        throw error;
+        apiError.status = response.status;
+        apiError.data = responseBody;
+
+        throw apiError;
     }
 
     return responseBody;

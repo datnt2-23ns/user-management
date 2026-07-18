@@ -6,9 +6,40 @@ function createHeader() {
                     User Management
                 </a>
 
-                <div class="navbar__links">
-                    <a href="/pages/login.html">Đăng nhập</a>
-                    <a href="/pages/register.html">Đăng ký</a>
+                <!-- Hiển thị khi chưa đăng nhập -->
+                <div
+                    class="navbar__links"
+                    data-auth-guest
+                >
+                    <a href="/pages/login.html">
+                        Đăng nhập
+                    </a>
+
+                    <a href="/pages/register.html">
+                        Đăng ký
+                    </a>
+                </div>
+
+                <!-- Hiển thị khi đã đăng nhập -->
+                <div
+                    class="navbar__user"
+                    data-auth-user
+                    hidden
+                >
+                    <span class="navbar__welcome">
+                        Xin chào,
+                        <strong data-auth-name>
+                            Người dùng
+                        </strong>
+                    </span>
+
+                    <button
+                        class="navbar__logout"
+                        type="button"
+                        data-logout-button
+                    >
+                        Đăng xuất
+                    </button>
                 </div>
             </nav>
         </header>
@@ -26,8 +57,11 @@ function createFooter() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    const headerElement = document.querySelector("[data-app-header]");
-    const footerElement = document.querySelector("[data-app-footer]");
+    const headerElement =
+        document.querySelector("[data-app-header]");
+
+    const footerElement =
+        document.querySelector("[data-app-footer]");
 
     if (headerElement) {
         headerElement.innerHTML = createHeader();
