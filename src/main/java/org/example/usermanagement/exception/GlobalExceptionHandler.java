@@ -169,6 +169,18 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(CurrentUserNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse>
+    handleCurrentUserNotFound(
+            CurrentUserNotFoundException exception
+    ) {
+        return buildResponse(
+                HttpStatus.UNAUTHORIZED,
+                exception.getMessage(),
+                null
+        );
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse>
     handleUnexpectedException(
