@@ -37,22 +37,17 @@ public class AvatarStorageServiceImpl
     private final long maximumFileSize;
 
     public AvatarStorageServiceImpl(
-            @Value("${app.upload.avatar-dir:uploads/avatars}")
-            String avatarDirectory,
+            @Value("${app.upload.avatar-dir:uploads/avatars}") String avatarDirectory,
 
-            @Value("${app.upload.avatar-url-prefix:/uploads/avatars}")
-            String avatarUrlPrefix,
+            @Value("${app.upload.avatar-url-prefix:/uploads/avatars}") String avatarUrlPrefix,
 
-            @Value("${app.upload.avatar-max-size:5242880}")
-            long maximumFileSize
-    ) {
+            @Value("${app.upload.avatar-max-size:5242880}") long maximumFileSize) {
         this.avatarDirectory = Path
                 .of(avatarDirectory)
                 .toAbsolutePath()
                 .normalize();
 
-        this.avatarUrlPrefix =
-                normalizeUrlPrefix(avatarUrlPrefix);
+        this.avatarUrlPrefix = normalizeUrlPrefix(avatarUrlPrefix);
 
         this.maximumFileSize = maximumFileSize;
 
@@ -68,8 +63,7 @@ public class AvatarStorageServiceImpl
 
         validateImageContent(content);
 
-        String filename =
-                UUID.randomUUID() + extension;
+        String filename = UUID.randomUUID() + extension;
 
         Path targetPath = avatarDirectory
                 .resolve(filename)
@@ -77,21 +71,18 @@ public class AvatarStorageServiceImpl
 
         if (!targetPath.startsWith(avatarDirectory)) {
             throw new InvalidAvatarException(
-                    "Tên file ảnh đại diện không hợp lệ"
-            );
+                    "Tên file ảnh đại diện không hợp lệ");
         }
 
         try {
             Files.write(
                     targetPath,
                     content,
-                    StandardOpenOption.CREATE_NEW
-            );
+                    StandardOpenOption.CREATE_NEW);
         } catch (IOException exception) {
             throw new AvatarStorageException(
                     "Không thể lưu ảnh đại diện",
-                    exception
-            );
+                    exception);
         }
 
         return avatarUrlPrefix + "/" + filename;
@@ -99,19 +90,15 @@ public class AvatarStorageServiceImpl
 
     @Override
     public void deleteByUrl(String avatarUrl) {
-        if (
-                avatarUrl == null
-                        || avatarUrl.isBlank()
-                        || !avatarUrl.startsWith(
-                        avatarUrlPrefix + "/"
-                )
-        ) {
+        if (avatarUrl == null
+                || avatarUrl.isBlank()
+                || !avatarUrl.startsWith(
+                        avatarUrlPrefix + "/")) {
             return;
         }
 
         String filename = avatarUrl.substring(
-                avatarUrl.lastIndexOf('/') + 1
-        );
+                avatarUrl.lastIndexOf('/') + 1);
 
         if (filename.isBlank()) {
             return;
@@ -124,8 +111,7 @@ public class AvatarStorageServiceImpl
         if (!filePath.startsWith(avatarDirectory)) {
             log.warn(
                     "Không thể xóa file nằm ngoài thư mục avatar: {}",
-                    filePath
-            );
+                    filePath);
             return;
         }
 
@@ -135,24 +121,20 @@ public class AvatarStorageServiceImpl
             log.warn(
                     "Không thể xóa ảnh đại diện cũ: {}",
                     filePath,
-                    exception
-            );
+                    exception);
         }
     }
 
     private void validateBasicInformation(
-            MultipartFile file
-    ) {
+            MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new InvalidAvatarException(
-                    "Vui lòng chọn ảnh đại diện"
-            );
+                    "Vui lòng chọn ảnh đại diện");
         }
 
         if (file.getSize() > maximumFileSize) {
             throw new InvalidAvatarException(
-                    "Ảnh đại diện không được vượt quá 5 MB"
-            );
+                    "Ảnh đại diện không được vượt quá 2 MB");
         }
     }
 
@@ -162,8 +144,7 @@ public class AvatarStorageServiceImpl
         } catch (IOException exception) {
             throw new AvatarStorageException(
                     "Không thể đọc file ảnh đại diện",
-                    exception
-            );
+                    exception);
         }
     }
 
@@ -177,8 +158,7 @@ public class AvatarStorageServiceImpl
         }
 
         throw new InvalidAvatarException(
-                "Chỉ chấp nhận ảnh JPG hoặc PNG"
-        );
+                "Chỉ chấp nhận ảnh JPG hoặc PNG");
     }
 
     private boolean isPng(byte[] content) {
@@ -186,9 +166,7 @@ public class AvatarStorageServiceImpl
             return false;
         }
 
-        for (int index = 0;
-             index < PNG_SIGNATURE.length;
-             index++) {
+        for (int index = 0; index < PNG_SIGNATURE.length; index++) {
 
             if (content[index] != PNG_SIGNATURE[index]) {
                 return false;
@@ -207,18 +185,14 @@ public class AvatarStorageServiceImpl
 
     private void validateImageContent(byte[] content) {
         try (
-                ByteArrayInputStream inputStream =
-                        new ByteArrayInputStream(content)
-        ) {
+                ByteArrayInputStream inputStream = new ByteArrayInputStream(content)) {
             if (ImageIO.read(inputStream) == null) {
                 throw new InvalidAvatarException(
-                        "Nội dung file ảnh không hợp lệ"
-                );
+                        "Nội dung file ảnh không hợp lệ");
             }
         } catch (IOException exception) {
             throw new InvalidAvatarException(
-                    "Nội dung file ảnh không hợp lệ"
-            );
+                    "Nội dung file ảnh không hợp lệ");
         }
     }
 
@@ -228,14 +202,12 @@ public class AvatarStorageServiceImpl
         } catch (IOException exception) {
             throw new AvatarStorageException(
                     "Không thể khởi tạo thư mục lưu ảnh đại diện",
-                    exception
-            );
+                    exception);
         }
     }
 
     private String normalizeUrlPrefix(
-            String prefix
-    ) {
+            String prefix) {
         if (prefix == null || prefix.isBlank()) {
             return "/uploads/avatars";
         }
@@ -246,14 +218,11 @@ public class AvatarStorageServiceImpl
             normalized = "/" + normalized;
         }
 
-        while (
-                normalized.length() > 1
-                        && normalized.endsWith("/")
-        ) {
+        while (normalized.length() > 1
+                && normalized.endsWith("/")) {
             normalized = normalized.substring(
                     0,
-                    normalized.length() - 1
-            );
+                    normalized.length() - 1);
         }
 
         return normalized;

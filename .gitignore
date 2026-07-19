@@ -56,3 +56,5 @@ application-dev-local.yml
 # Secrets
 *.pem
 *.key
+
+uploads/

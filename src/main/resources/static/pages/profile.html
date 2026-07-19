@@ -1,134 +1,243 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
 
-    <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>Thông tin cá nhân</title>
+    <title>Cập nhật hồ sơ</title>
 
-    <link rel="stylesheet" href="/css/main.css">
-    <link rel="stylesheet" href="/css/profile.css">
-</head>
-<body>
+    <link rel="stylesheet" href="/css/main.css" />
 
-<div data-app-header></div>
+    <link rel="stylesheet" href="/css/profile.css" />
+  </head>
+  <body>
+    <div data-app-header></div>
 
-<main class="profile-page">
-    <section class="profile-card">
-        <div class="profile-heading">
-            <h1>Thông tin cá nhân</h1>
+    <main class="profile-page">
+      <section class="profile-card">
+        <header class="profile-heading">
+          <h1>Hồ sơ cá nhân</h1>
 
-            <p>
-                Thông tin tài khoản đang đăng nhập.
-            </p>
+          <p>Cập nhật thông tin và ảnh đại diện của tài khoản.</p>
+        </header>
+
+        <div id="profile-loading" class="profile-state">
+          Đang tải thông tin...
         </div>
 
         <div
-                id="profile-loading"
-                class="profile-state"
-        >
-            Đang tải thông tin...
-        </div>
+          id="page-message"
+          class="profile-message"
+          role="alert"
+          aria-live="polite"
+          hidden
+        ></div>
 
-        <div
-                id="profile-error"
-                class="profile-message error"
+        <div id="profile-content" class="profile-content" hidden>
+          <aside class="avatar-section">
+            <img
+              id="profile-avatar"
+              class="profile-avatar"
+              src="/images/default-avatar.svg"
+              alt="Ảnh đại diện"
+            />
+
+            <h2 id="profile-full-name">Người dùng</h2>
+
+            <p id="profile-email">—</p>
+
+            <form id="avatar-form" class="avatar-form" novalidate>
+              <label class="file-label" for="avatar-file">
+                Chọn ảnh đại diện
+              </label>
+
+              <input
+                id="avatar-file"
+                name="file"
+                type="file"
+                accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+              />
+
+              <p class="file-help">
+                Chấp nhận JPG, JPEG hoặc PNG. Dung lượng tối đa 2 MB.
+              </p>
+
+              <p id="avatar-file-info" class="file-info"></p>
+
+              <div
+                id="avatar-message"
+                class="form-message"
                 role="alert"
                 aria-live="polite"
                 hidden
-        ></div>
+              ></div>
 
-        <div
-                id="profile-content"
-                class="profile-content"
-                hidden
-        >
-            <aside class="profile-summary">
-                <img
-                        id="profile-avatar"
-                        class="profile-avatar"
-                        src="/images/default-avatar.svg"
-                        alt="Ảnh đại diện"
-                >
+              <button id="avatar-submit" class="button primary" type="submit">
+                Cập nhật ảnh
+              </button>
+            </form>
+          </aside>
 
-                <h2 id="profile-full-name">
-                    Người dùng
-                </h2>
+          <section class="profile-form-section">
+            <h2>Cập nhật thông tin</h2>
 
-                <p id="profile-email">
-                    —
-                </p>
+            <form id="profile-form" novalidate>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="last-name">
+                    Họ và tên đệm
+                    <span aria-hidden="true">*</span>
+                  </label>
 
-                <div class="profile-badges">
-                    <span
-                            id="profile-role"
-                            class="profile-badge"
-                    >
-                        —
-                    </span>
+                  <input
+                    id="last-name"
+                    name="lastName"
+                    type="text"
+                    maxlength="150"
+                    autocomplete="family-name"
+                  />
 
-                    <span
-                            id="profile-status"
-                            class="profile-badge"
-                    >
-                        —
-                    </span>
+                  <span class="field-error" data-field-error="lastName"></span>
                 </div>
-            </aside>
 
-            <section class="profile-details">
-                <h2>Chi tiết hồ sơ</h2>
+                <div class="form-group">
+                  <label for="first-name">
+                    Tên
+                    <span aria-hidden="true">*</span>
+                  </label>
 
-                <dl class="profile-grid">
-                    <div class="profile-field">
-                        <dt>Họ và tên đệm</dt>
-                        <dd id="profile-last-name">—</dd>
-                    </div>
+                  <input
+                    id="first-name"
+                    name="firstName"
+                    type="text"
+                    maxlength="100"
+                    autocomplete="given-name"
+                  />
 
-                    <div class="profile-field">
-                        <dt>Tên</dt>
-                        <dd id="profile-first-name">—</dd>
-                    </div>
+                  <span class="field-error" data-field-error="firstName"></span>
+                </div>
 
-                    <div class="profile-field">
-                        <dt>Ngày sinh</dt>
-                        <dd id="profile-date-of-birth">—</dd>
-                    </div>
+                <div class="form-group full-width">
+                  <label for="email"> Email </label>
 
-                    <div class="profile-field">
-                        <dt>Giới tính</dt>
-                        <dd id="profile-gender">—</dd>
-                    </div>
+                  <input id="email" type="email" readonly disabled />
 
-                    <div class="profile-field full-width">
-                        <dt>Địa chỉ</dt>
-                        <dd id="profile-address">—</dd>
-                    </div>
+                  <p class="field-help">
+                    Email không được thay đổi tại chức năng này.
+                  </p>
+                </div>
 
-                    <div class="profile-field">
-                        <dt>Số điện thoại</dt>
-                        <dd id="profile-phone">—</dd>
-                    </div>
+                <div class="form-group">
+                  <label for="date-of-birth">
+                    Ngày sinh
+                    <span aria-hidden="true">*</span>
+                  </label>
 
-                    <div class="profile-field">
-                        <dt>Ngày tạo tài khoản</dt>
-                        <dd id="profile-created-at">—</dd>
-                    </div>
-                </dl>
-            </section>
+                  <input id="date-of-birth" name="dateOfBirth" type="date" />
+
+                  <span
+                    class="field-error"
+                    data-field-error="dateOfBirth"
+                  ></span>
+                </div>
+
+                <div class="form-group">
+                  <label for="gender">
+                    Giới tính
+                    <span aria-hidden="true">*</span>
+                  </label>
+
+                  <select id="gender" name="gender">
+                    <option value="">-- Chọn giới tính --</option>
+
+                    <option value="MALE">Nam</option>
+
+                    <option value="FEMALE">Nữ</option>
+
+                    <option value="OTHER">Khác</option>
+                  </select>
+
+                  <span class="field-error" data-field-error="gender"></span>
+                </div>
+
+                <div class="form-group full-width">
+                  <label for="address">
+                    Địa chỉ
+                    <span aria-hidden="true">*</span>
+                  </label>
+
+                  <textarea
+                    id="address"
+                    name="address"
+                    rows="3"
+                    maxlength="255"
+                  ></textarea>
+
+                  <span class="field-error" data-field-error="address"></span>
+                </div>
+
+                <div class="form-group full-width">
+                  <label for="phone">
+                    Số điện thoại
+                    <span aria-hidden="true">*</span>
+                  </label>
+
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    maxlength="10"
+                    inputmode="numeric"
+                    autocomplete="tel"
+                    placeholder="Ví dụ: 0912345678"
+                  />
+
+                  <span class="field-error" data-field-error="phone"></span>
+                </div>
+              </div>
+
+              <div
+                id="profile-form-message"
+                class="form-message"
+                role="alert"
+                aria-live="polite"
+                hidden
+              ></div>
+
+              <div class="form-actions">
+                <button id="profile-edit" class="button primary" type="button">
+                  Cập nhật thông tin
+                </button>
+
+                <button
+                  id="profile-reset"
+                  class="button secondary"
+                  type="button"
+                  hidden
+                >
+                  Hủy
+                </button>
+
+                <button
+                  id="profile-submit"
+                  class="button primary"
+                  type="submit"
+                  hidden
+                >
+                  Lưu thông tin
+                </button>
+              </div>
+            </form>
+          </section>
         </div>
-    </section>
-</main>
+      </section>
+    </main>
 
-<div data-app-footer></div>
+    <div data-app-footer></div>
 
-<script src="/js/layout.js"></script>
-<script type="module" src="/js/auth-ui.js"></script>
-<script type="module" src="/js/profile.js"></script>
-
-</body>
+    <script src="/js/layout.js"></script>
+    <script type="module" src="/js/auth-ui.js"></script>
+    <script type="module" src="/js/profile.js"></script>
+  </body>
 </html>
