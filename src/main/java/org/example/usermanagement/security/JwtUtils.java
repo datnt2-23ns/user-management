@@ -17,85 +17,76 @@ import java.util.List;
 @Component
 public class JwtUtils {
 
-    private final SecretKey signingKey;
-    private final long expirationMs;
+        private final SecretKey signingKey;
+        private final long expirationMs;
 
-    public JwtUtils(
-            @Value("${app.jwt.secret}") String jwtSecret,
-            @Value("${app.jwt.expiration-ms}") long expirationMs
-    ) {
-        if (jwtSecret == null || jwtSecret.isBlank()) {
-            throw new IllegalArgumentException(
-                    "JWT_SECRET không được để trống"
-            );
+        public JwtUtils(
+                        @Value("${app.jwt.secret}") String jwtSecret,
+                        @Value("${app.jwt.expiration-ms}") long expirationMs) {
+                if (jwtSecret == null || jwtSecret.isBlank()) {
+                        throw new IllegalArgumentException(
+                                        "JWT_SECRET không được để trống");
+                }
+
+                if (expirationMs <= 0) {
+                        throw new IllegalArgumentException(
+                                        "JWT_EXPIRATION_MS phải lớn hơn 0");
+                }
+
+                byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+
+                this.signingKey = Keys.hmacShaKeyFor(keyBytes);
+
+                this.expirationMs = expirationMs;
         }
 
-        if (expirationMs <= 0) {
-            throw new IllegalArgumentException(
-                    "JWT_EXPIRATION_MS phải lớn hơn 0"
-            );
+        public String generateToken(UserDetails userDetails) {
+                Instant issuedAt = Instant.now();
+
+                Instant expiresAt = issuedAt.plusMillis(expirationMs);
+
+                List<String> authorities = userDetails.getAuthorities()
+                                .stream()
+                                .map(GrantedAuthority::getAuthority)
+                                .toList();
+
+                return Jwts.builder()
+                                .subject(userDetails.getUsername())
+                                .claim("authorities", authorities)
+                                .issuedAt(Date.from(issuedAt))
+                                .expiration(Date.from(expiresAt))
+                                .signWith(signingKey)
+                                .compact();
         }
 
-        byte[] keyBytes =
-                Decoders.BASE64.decode(jwtSecret);
+        public String extractUsername(String token) {
+                return extractAllClaims(token).getSubject();
+        }
 
-        this.signingKey =
-                Keys.hmacShaKeyFor(keyBytes);
+        public boolean isTokenValid(
+                        String token,
+                        UserDetails userDetails) {
+                Claims claims = extractAllClaims(token);
 
-        this.expirationMs = expirationMs;
-    }
+                String username = claims.getSubject();
+                Date expiration = claims.getExpiration();
 
-    public String generateToken(UserDetails userDetails) {
-        Instant issuedAt = Instant.now();
+                return username != null
+                                && username.equalsIgnoreCase(
+                                                userDetails.getUsername())
+                                && expiration != null
+                                && expiration.after(new Date());
+        }
 
-        Instant expiresAt =
-                issuedAt.plusMillis(expirationMs);
+        public long getExpirationSeconds() {
+                return expirationMs / 1000;
+        }
 
-        List<String> authorities =
-                userDetails.getAuthorities()
-                        .stream()
-                        .map(GrantedAuthority::getAuthority)
-                        .toList();
-
-        return Jwts.builder()
-                .subject(userDetails.getUsername())
-                .claim("authorities", authorities)
-                .issuedAt(Date.from(issuedAt))
-                .expiration(Date.from(expiresAt))
-                .signWith(signingKey)
-                .compact();
-    }
-
-    public String extractUsername(String token) {
-        return extractAllClaims(token).getSubject();
-    }
-
-    public boolean isTokenValid(
-            String token,
-            UserDetails userDetails
-    ) {
-        Claims claims = extractAllClaims(token);
-
-        String username = claims.getSubject();
-        Date expiration = claims.getExpiration();
-
-        return username != null
-                && username.equalsIgnoreCase(
-                userDetails.getUsername()
-        )
-                && expiration != null
-                && expiration.after(new Date());
-    }
-
-    public long getExpirationSeconds() {
-        return expirationMs / 1000;
-    }
-
-    private Claims extractAllClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(signingKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-    }
+        private Claims extractAllClaims(String token) {
+                return Jwts.parser()
+                                .verifyWith(signingKey)
+                                .build()
+                                .parseSignedClaims(token)
+                                .getPayload();
+        }
 }

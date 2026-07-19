@@ -24,81 +24,52 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserService userService;
+        private final UserService userService;
 
-    @GetMapping("/me")
-    @PreAuthorize(
-            "hasAnyRole('USER', 'ADMIN')"
-    )
-    public ResponseEntity<UserProfileResponse>
-    getCurrentUserProfile(
-            @AuthenticationPrincipal
-            UserDetails userDetails
-    ) {
-        validatePrincipal(userDetails);
+        @GetMapping("/me")
+        @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+        public ResponseEntity<UserProfileResponse> getCurrentUserProfile(
+                        @AuthenticationPrincipal UserDetails userDetails) {
+                validatePrincipal(userDetails);
 
-        return ResponseEntity.ok(
-                userService.getCurrentUserProfile(
-                        userDetails.getUsername()
-                )
-        );
-    }
-
-    @PutMapping("/me")
-    @PreAuthorize(
-            "hasAnyRole('USER', 'ADMIN')"
-    )
-    public ResponseEntity<UserProfileResponse>
-    updateCurrentUserProfile(
-            @AuthenticationPrincipal
-            UserDetails userDetails,
-
-            @Valid
-            @RequestBody
-            UpdateProfileRequest request
-    ) {
-        validatePrincipal(userDetails);
-
-        return ResponseEntity.ok(
-                userService.updateCurrentUserProfile(
-                        userDetails.getUsername(),
-                        request
-                )
-        );
-    }
-
-    @PutMapping(
-            value = "/me/avatar",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-    )
-    @PreAuthorize(
-            "hasAnyRole('USER', 'ADMIN')"
-    )
-    public ResponseEntity<UserProfileResponse>
-    updateCurrentUserAvatar(
-            @AuthenticationPrincipal
-            UserDetails userDetails,
-
-            @RequestParam("file")
-            MultipartFile file
-    ) {
-        validatePrincipal(userDetails);
-
-        return ResponseEntity.ok(
-                userService.updateCurrentUserAvatar(
-                        userDetails.getUsername(),
-                        file
-                )
-        );
-    }
-
-    private void validatePrincipal(
-            UserDetails userDetails
-    ) {
-        if (userDetails == null) {
-            throw new CurrentUserNotFoundException(
-                    "Bạn chưa đăng nhập hoặc token không hợp lệ"
-            );
+                return ResponseEntity.ok(
+                                userService.getCurrentUserProfile(
+                                                userDetails.getUsername()));
         }
-    }
+
+        @PutMapping("/me")
+        @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+        public ResponseEntity<UserProfileResponse> updateCurrentUserProfile(
+                        @AuthenticationPrincipal UserDetails userDetails,
+
+                        @Valid @RequestBody UpdateProfileRequest request) {
+                validatePrincipal(userDetails);
+
+                return ResponseEntity.ok(
+                                userService.updateCurrentUserProfile(
+                                                userDetails.getUsername(),
+                                                request));
+        }
+
+        @PutMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+        public ResponseEntity<UserProfileResponse> updateCurrentUserAvatar(
+                        @AuthenticationPrincipal UserDetails userDetails,
+
+                        @RequestParam("file") MultipartFile file) {
+                validatePrincipal(userDetails);
+
+                return ResponseEntity.ok(
+                                userService.updateCurrentUserAvatar(
+                                                userDetails.getUsername(),
+                                                file));
+        }
+
+        private void validatePrincipal(
+                        UserDetails userDetails) {
+                if (userDetails == null) {
+                        throw new CurrentUserNotFoundException(
+                                        "Bạn chưa đăng nhập hoặc token không hợp lệ");
+                }
+        }
 }

@@ -4,8 +4,7 @@ public class CurrentUserNotFoundException
         extends RuntimeException {
 
     public CurrentUserNotFoundException(
-            String message
-    ) {
+            String message) {
         super(message);
     }
 }

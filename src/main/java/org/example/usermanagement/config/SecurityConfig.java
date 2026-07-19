@@ -23,103 +23,90 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http,
-            DaoAuthenticationProvider authenticationProvider,
-            JwtAuthenticationFilter jwtAuthenticationFilter,
-            JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
-            JwtAccessDeniedHandler jwtAccessDeniedHandler
-    ) throws Exception {
+        @Bean
+        public SecurityFilterChain securityFilterChain(
+                        HttpSecurity http,
+                        DaoAuthenticationProvider authenticationProvider,
+                        JwtAuthenticationFilter jwtAuthenticationFilter,
+                        JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+                        JwtAccessDeniedHandler jwtAccessDeniedHandler) throws Exception {
 
-        http
-                .csrf(csrf -> csrf.disable())
+                http
+                                .csrf(csrf -> csrf.disable())
 
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS
-                        )
-                )
+                                .sessionManagement(session -> session.sessionCreationPolicy(
+                                                SessionCreationPolicy.STATELESS))
 
-                .formLogin(form -> form.disable())
+                                .formLogin(form -> form.disable())
 
-                .httpBasic(basic -> basic.disable())
+                                .httpBasic(basic -> basic.disable())
 
-                .authenticationProvider(authenticationProvider)
+                                .authenticationProvider(authenticationProvider)
 
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(
-                                jwtAuthenticationEntryPoint
-                        )
-                        .accessDeniedHandler(
-                                jwtAccessDeniedHandler
-                        )
-                )
+                                .exceptionHandling(exception -> exception
+                                                .authenticationEntryPoint(
+                                                                jwtAuthenticationEntryPoint)
+                                                .accessDeniedHandler(
+                                                                jwtAccessDeniedHandler))
 
-                .authorizeHttpRequests(authorize -> authorize
+                                .authorizeHttpRequests(authorize -> authorize
 
-                        .requestMatchers(
-                                "/",
-                                "/index.html",
-                                "/pages/**",
-                                "/css/**",
-                                "/js/**",
-                                "/images/**",
-                                "/assets/**",
-                                "/components/**",
-                                "/uploads/**",
-                                "/favicon.ico",
-                                "/error"
-                        ).permitAll()
+                                                .requestMatchers(
+                                                                "/",
+                                                                "/index.html",
+                                                                "/pages/**",
+                                                                "/css/**",
+                                                                "/js/**",
+                                                                "/images/**",
+                                                                "/assets/**",
+                                                                "/components/**",
+                                                                "/uploads/**",
+                                                                "/favicon.ico",
+                                                                "/error")
+                                                .permitAll()
 
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/api/auth/register",
-                                "/api/auth/login"
-                        ).permitAll()
+                                                .requestMatchers(
+                                                                HttpMethod.POST,
+                                                                "/api/auth/register",
+                                                                "/api/auth/login")
+                                                .permitAll()
 
-                        .requestMatchers(
-                                "/api/admin/**"
-                        ).hasRole("ADMIN")
+                                                .requestMatchers(
+                                                                "/api/admin/**")
+                                                .hasRole("ADMIN")
 
-                        .requestMatchers(
-                                "/api/users/me",
-                                "/api/users/me/**",
-                                "/api/profile/**"
-                        ).hasAnyRole(
-                                "USER",
-                                "ADMIN"
-                        )
+                                                .requestMatchers(
+                                                                "/api/users/me",
+                                                                "/api/users/me/**",
+                                                                "/api/profile/**")
+                                                .hasAnyRole(
+                                                                "USER",
+                                                                "ADMIN")
 
-                        .anyRequest()
-                        .authenticated()
-                )
+                                                .anyRequest()
+                                                .authenticated())
 
-                .addFilterBefore(
-                        jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class
-                );
+                                .addFilterBefore(
+                                                jwtAuthenticationFilter,
+                                                UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+                return http.build();
+        }
 
-    @Bean
-    public DaoAuthenticationProvider authenticationProvider(
-            UserDetailsService userDetailsService,
-            PasswordEncoder passwordEncoder
-    ) {
-        DaoAuthenticationProvider provider =
-                new DaoAuthenticationProvider(userDetailsService);
+        @Bean
+        public DaoAuthenticationProvider authenticationProvider(
+                        UserDetailsService userDetailsService,
+                        PasswordEncoder passwordEncoder) {
+                DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
 
-        provider.setPasswordEncoder(passwordEncoder);
+                provider.setPasswordEncoder(passwordEncoder);
 
-        return provider;
-    }
+                return provider;
+        }
 
-    @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration configuration
-    ) throws Exception {
-        return configuration.getAuthenticationManager();
-    }
+        @Bean
+        public AuthenticationManager authenticationManager(
+                        AuthenticationConfiguration configuration) throws Exception {
+                return configuration.getAuthenticationManager();
+        }
 }

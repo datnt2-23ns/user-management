@@ -4,8 +4,7 @@ public class AvatarStorageException extends RuntimeException {
 
     public AvatarStorageException(
             String message,
-            Throwable cause
-    ) {
+            Throwable cause) {
         super(message, cause);
     }
 }

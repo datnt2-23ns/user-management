@@ -1,5 +1,5 @@
 function createHeader() {
-    return `
+  return `
         <header class="app-header">
             <nav class="navbar">
                 <a class="navbar__brand" href="/">
@@ -50,9 +50,9 @@ function createHeader() {
 }
 
 function createFooter() {
-    const currentYear = new Date().getFullYear();
+  const currentYear = new Date().getFullYear();
 
-    return `
+  return `
         <footer class="app-footer">
             User Management System © ${currentYear}
         </footer>
@@ -60,17 +60,15 @@ function createFooter() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    const headerElement =
-        document.querySelector("[data-app-header]");
+  const headerElement = document.querySelector("[data-app-header]");
 
-    const footerElement =
-        document.querySelector("[data-app-footer]");
+  const footerElement = document.querySelector("[data-app-footer]");
 
-    if (headerElement) {
-        headerElement.innerHTML = createHeader();
-    }
+  if (headerElement) {
+    headerElement.innerHTML = createHeader();
+  }
 
-    if (footerElement) {
-        footerElement.innerHTML = createFooter();
-    }
+  if (footerElement) {
+    footerElement.innerHTML = createFooter();
+  }
 });

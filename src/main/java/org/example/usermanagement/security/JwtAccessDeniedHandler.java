@@ -17,42 +17,35 @@ import java.time.LocalDateTime;
 @Component
 @RequiredArgsConstructor
 public class JwtAccessDeniedHandler
-        implements AccessDeniedHandler {
+                implements AccessDeniedHandler {
 
-    private final ObjectMapper objectMapper;
+        private final ObjectMapper objectMapper;
 
-    @Override
-    public void handle(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            AccessDeniedException accessDeniedException
-    ) throws IOException {
+        @Override
+        public void handle(
+                        HttpServletRequest request,
+                        HttpServletResponse response,
+                        AccessDeniedException accessDeniedException) throws IOException {
 
-        ApiErrorResponse responseBody =
-                ApiErrorResponse.builder()
-                        .status(
-                                HttpStatus.FORBIDDEN.value()
-                        )
-                        .message(
-                                "Bạn không có quyền truy cập chức năng này"
-                        )
-                        .timestamp(LocalDateTime.now())
-                        .errors(null)
-                        .build();
+                ApiErrorResponse responseBody = ApiErrorResponse.builder()
+                                .status(
+                                                HttpStatus.FORBIDDEN.value())
+                                .message(
+                                                "Bạn không có quyền truy cập chức năng này")
+                                .timestamp(LocalDateTime.now())
+                                .errors(null)
+                                .build();
 
-        response.setStatus(
-                HttpStatus.FORBIDDEN.value()
-        );
+                response.setStatus(
+                                HttpStatus.FORBIDDEN.value());
 
-        response.setContentType(
-                MediaType.APPLICATION_JSON_VALUE
-        );
+                response.setContentType(
+                                MediaType.APPLICATION_JSON_VALUE);
 
-        response.setCharacterEncoding("UTF-8");
+                response.setCharacterEncoding("UTF-8");
 
-        objectMapper.writeValue(
-                response.getOutputStream(),
-                responseBody
-        );
-    }
+                objectMapper.writeValue(
+                                response.getOutputStream(),
+                                responseBody);
+        }
 }

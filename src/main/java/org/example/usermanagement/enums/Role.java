@@ -27,7 +27,6 @@ public enum Role {
         }
 
         throw new IllegalArgumentException(
-                "Unknown Role code: " + code
-        );
+                "Unknown Role code: " + code);
     }
 }

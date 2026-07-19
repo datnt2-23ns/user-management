@@ -28,7 +28,6 @@ public enum UserStatus {
         }
 
         throw new IllegalArgumentException(
-                "Unknown UserStatus code: " + code
-        );
+                "Unknown UserStatus code: " + code);
     }
 }

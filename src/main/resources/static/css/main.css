@@ -148,30 +148,30 @@ a {
 }
 
 [hidden] {
-    display: none !important;
+  display: none !important;
 }
 
 .navbar__user {
-    display: flex;
-    align-items: center;
-    gap: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .navbar__logout {
-    padding: 8px 14px;
-    border: none;
-    border-radius: 6px;
-    background: #dc2626;
-    color: #ffffff;
-    cursor: pointer;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #dc2626;
+  color: #ffffff;
+  cursor: pointer;
 }
 
 .navbar__profile-link {
-    color: #2563eb;
-    font-weight: 600;
-    text-decoration: none;
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: none;
 }
 
 .navbar__profile-link:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }

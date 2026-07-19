@@ -14,18 +14,12 @@ import lombok.Setter;
 @AllArgsConstructor
 public class LoginRequest {
 
-    @NotBlank(message = "Email không được để trống")
-    @Email(message = "Email không đúng định dạng")
-    @Size(
-            max = 320,
-            message = "Email không được vượt quá 320 ký tự"
-    )
-    private String email;
+        @NotBlank(message = "Email không được để trống")
+        @Email(message = "Email không đúng định dạng")
+        @Size(max = 320, message = "Email không được vượt quá 320 ký tự")
+        private String email;
 
-    @NotBlank(message = "Mật khẩu không được để trống")
-    @Size(
-            max = 64,
-            message = "Mật khẩu không được vượt quá 64 ký tự"
-    )
-    private String password;
+        @NotBlank(message = "Mật khẩu không được để trống")
+        @Size(max = 64, message = "Mật khẩu không được vượt quá 64 ký tự")
+        private String password;
 }

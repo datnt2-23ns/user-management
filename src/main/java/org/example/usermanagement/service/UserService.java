@@ -6,17 +6,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
 
-    UserProfileResponse getCurrentUserProfile(
-            String email
-    );
+        UserProfileResponse getCurrentUserProfile(
+                        String email);
 
-    UserProfileResponse updateCurrentUserProfile(
-            String email,
-            UpdateProfileRequest request
-    );
+        UserProfileResponse updateCurrentUserProfile(
+                        String email,
+                        UpdateProfileRequest request);
 
-    UserProfileResponse updateCurrentUserAvatar(
-            String email,
-            MultipartFile file
-    );
+        UserProfileResponse updateCurrentUserAvatar(
+                        String email,
+                        MultipartFile file);
 }

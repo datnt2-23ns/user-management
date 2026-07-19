@@ -14,61 +14,51 @@ import java.nio.file.Path;
 @Slf4j
 public class WebConfig implements WebMvcConfigurer {
 
-    private final Path avatarDirectory;
+        private final Path avatarDirectory;
 
-    public WebConfig(
-            @Value("${app.upload.avatar-dir:uploads/avatars}")
-            String avatarDirectory
-    ) {
-        this.avatarDirectory = Path
-                .of(avatarDirectory)
-                .toAbsolutePath()
-                .normalize();
+        public WebConfig(
+                        @Value("${app.upload.avatar-dir:uploads/avatars}") String avatarDirectory) {
+                this.avatarDirectory = Path
+                                .of(avatarDirectory)
+                                .toAbsolutePath()
+                                .normalize();
 
-        createAvatarDirectory();
-    }
-
-    @Override
-    public void addResourceHandlers(
-            ResourceHandlerRegistry registry
-    ) {
-        String resourceLocation =
-                avatarDirectory.toUri().toString();
-
-        if (!resourceLocation.endsWith("/")) {
-            resourceLocation += "/";
+                createAvatarDirectory();
         }
 
-        registry
-                .addResourceHandler(
-                        "/uploads/avatars/**"
-                )
-                .addResourceLocations(
-                        resourceLocation
-                )
-                .setCachePeriod(0);
+        @Override
+        public void addResourceHandlers(
+                        ResourceHandlerRegistry registry) {
+                String resourceLocation = avatarDirectory.toUri().toString();
 
-        log.info(
-                "Avatar resource mapping: /uploads/avatars/** -> {}",
-                resourceLocation
-        );
-    }
+                if (!resourceLocation.endsWith("/")) {
+                        resourceLocation += "/";
+                }
 
-    private void createAvatarDirectory() {
-        try {
-            Files.createDirectories(
-                    avatarDirectory
-            );
+                registry
+                                .addResourceHandler(
+                                                "/uploads/avatars/**")
+                                .addResourceLocations(
+                                                resourceLocation)
+                                .setCachePeriod(0);
 
-            log.info(
-                    "Avatar storage directory: {}",
-                    avatarDirectory
-            );
-        } catch (IOException exception) {
-            throw new IllegalStateException(
-                    "Không thể khởi tạo thư mục lưu ảnh đại diện",
-                    exception
-            );
+                log.info(
+                                "Avatar resource mapping: /uploads/avatars/** -> {}",
+                                resourceLocation);
         }
-    }
+
+        private void createAvatarDirectory() {
+                try {
+                        Files.createDirectories(
+                                        avatarDirectory);
+
+                        log.info(
+                                        "Avatar storage directory: {}",
+                                        avatarDirectory);
+                } catch (IOException exception) {
+                        throw new IllegalStateException(
+                                        "Không thể khởi tạo thư mục lưu ảnh đại diện",
+                                        exception);
+                }
+        }
 }
