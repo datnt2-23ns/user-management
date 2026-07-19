@@ -7,6 +7,11 @@ spring:
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:}
 
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
   jpa:
     open-in-view: false
     show-sql: true
@@ -37,3 +42,8 @@ app:
   jwt:
     secret: ${JWT_SECRET}
     expiration-ms: ${JWT_EXPIRATION_MS:3600000}
+
+  upload:
+    avatar-dir: ${AVATAR_UPLOAD_DIR:uploads/avatars}
+    avatar-url-prefix: /uploads/avatars
+    avatar-max-size: 5242880

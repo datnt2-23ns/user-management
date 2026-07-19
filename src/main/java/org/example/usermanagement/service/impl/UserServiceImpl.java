@@ -4,12 +4,15 @@ import lombok.RequiredArgsConstructor;
 import org.example.usermanagement.dto.request.UpdateProfileRequest;
 import org.example.usermanagement.dto.response.UserProfileResponse;
 import org.example.usermanagement.entity.User;
-import org.example.usermanagement.exception.CurrentUserNotFoundException;
 import org.example.usermanagement.exception.UserNotFoundException;
 import org.example.usermanagement.repository.UserRepository;
+import org.example.usermanagement.service.AvatarStorageService;
 import org.example.usermanagement.service.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Locale;
 
@@ -18,6 +21,7 @@ import java.util.Locale;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final AvatarStorageService avatarStorageService;
 
     @Override
     @Transactional(readOnly = true)
@@ -30,8 +34,8 @@ public class UserServiceImpl implements UserService {
         User user = userRepository
                 .findByEmailIgnoreCase(normalizedEmail)
                 .orElseThrow(() ->
-                        new CurrentUserNotFoundException(
-                                "Không thể xác định người dùng đang đăng nhập"
+                        new UserNotFoundException(
+                                "Không tìm thấy tài khoản đang đăng nhập"
                         )
                 );
 
@@ -80,10 +84,100 @@ public class UserServiceImpl implements UserService {
         );
 
         user.setUpdatedBy(user.getId());
+
         User updatedUser =
                 userRepository.saveAndFlush(user);
 
         return mapToProfileResponse(updatedUser);
+    }
+
+    @Override
+    @Transactional
+    public UserProfileResponse updateCurrentUserAvatar(
+            String email,
+            MultipartFile file
+    ) {
+        String normalizedEmail =
+                normalizeEmail(email);
+
+        User user = userRepository
+                .findByEmailIgnoreCase(normalizedEmail)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "Không tìm thấy tài khoản đang đăng nhập"
+                        )
+                );
+
+        String oldAvatarUrl =
+                user.getAvatarUrl();
+
+        String newAvatarUrl =
+                avatarStorageService.store(file);
+
+        try {
+            user.setAvatarUrl(newAvatarUrl);
+            user.setUpdatedBy(user.getId());
+
+            User updatedUser =
+                    userRepository.saveAndFlush(user);
+
+            registerAvatarCleanup(
+                    oldAvatarUrl,
+                    newAvatarUrl
+            );
+
+            return mapToProfileResponse(updatedUser);
+        } catch (RuntimeException exception) {
+            avatarStorageService.deleteByUrl(
+                    newAvatarUrl
+            );
+
+            throw exception;
+        }
+    }
+    private void registerAvatarCleanup(
+            String oldAvatarUrl,
+            String newAvatarUrl
+    ) {
+        if (!TransactionSynchronizationManager
+                .isSynchronizationActive()) {
+
+            avatarStorageService.deleteByUrl(
+                    oldAvatarUrl
+            );
+
+            return;
+        }
+
+        TransactionSynchronizationManager
+                .registerSynchronization(
+                        new TransactionSynchronization() {
+
+                            @Override
+                            public void afterCommit() {
+                                avatarStorageService
+                                        .deleteByUrl(
+                                                oldAvatarUrl
+                                        );
+                            }
+
+                            @Override
+                            public void afterCompletion(
+                                    int status
+                            ) {
+                                if (
+                                        status
+                                                != TransactionSynchronization
+                                                .STATUS_COMMITTED
+                                ) {
+                                    avatarStorageService
+                                            .deleteByUrl(
+                                                    newAvatarUrl
+                                            );
+                                }
+                            }
+                        }
+                );
     }
 
     private UserProfileResponse mapToProfileResponse(

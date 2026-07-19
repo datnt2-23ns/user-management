@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/users")
@@ -60,6 +63,31 @@ public class UserController {
                 userService.updateCurrentUserProfile(
                         userDetails.getUsername(),
                         request
+                )
+        );
+    }
+
+    @PutMapping(
+            value = "/me/avatar",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    @PreAuthorize(
+            "hasAnyRole('USER', 'ADMIN')"
+    )
+    public ResponseEntity<UserProfileResponse>
+    updateCurrentUserAvatar(
+            @AuthenticationPrincipal
+            UserDetails userDetails,
+
+            @RequestParam("file")
+            MultipartFile file
+    ) {
+        validatePrincipal(userDetails);
+
+        return ResponseEntity.ok(
+                userService.updateCurrentUserAvatar(
+                        userDetails.getUsername(),
+                        file
                 )
         );
     }

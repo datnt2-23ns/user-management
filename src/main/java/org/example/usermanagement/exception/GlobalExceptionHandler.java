@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
+import org.springframework.web.multipart.MultipartException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -188,6 +191,75 @@ public class GlobalExceptionHandler {
         return buildResponse(
                 HttpStatus.NOT_FOUND,
                 exception.getMessage(),
+                null
+        );
+    }
+
+    @ExceptionHandler(InvalidAvatarException.class)
+    public ResponseEntity<ApiErrorResponse>
+    handleInvalidAvatar(
+            InvalidAvatarException exception
+    ) {
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                exception.getMessage(),
+                null
+        );
+    }
+
+    @ExceptionHandler(
+            MissingServletRequestPartException.class
+    )
+    public ResponseEntity<ApiErrorResponse>
+    handleMissingFilePart(
+            MissingServletRequestPartException exception
+    ) {
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                "Vui lòng gửi file ảnh đại diện với tên trường là file",
+                null
+        );
+    }
+
+    @ExceptionHandler(
+            MaxUploadSizeExceededException.class
+    )
+    public ResponseEntity<ApiErrorResponse>
+    handleMaximumUploadSizeExceeded(
+            MaxUploadSizeExceededException exception
+    ) {
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                "Ảnh đại diện không được vượt quá 5 MB",
+                null
+        );
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ApiErrorResponse>
+    handleMultipartException(
+            MultipartException exception
+    ) {
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                "Dữ liệu upload ảnh đại diện không hợp lệ",
+                null
+        );
+    }
+
+    @ExceptionHandler(AvatarStorageException.class)
+    public ResponseEntity<ApiErrorResponse>
+    handleAvatarStorage(
+            AvatarStorageException exception
+    ) {
+        log.error(
+                "Avatar storage error",
+                exception
+        );
+
+        return buildResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Không thể lưu ảnh đại diện. Vui lòng thử lại sau",
                 null
         );
     }
