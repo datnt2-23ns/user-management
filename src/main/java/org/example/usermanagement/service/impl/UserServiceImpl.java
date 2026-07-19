@@ -1,9 +1,11 @@
 package org.example.usermanagement.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.example.usermanagement.dto.request.UpdateProfileRequest;
 import org.example.usermanagement.dto.response.UserProfileResponse;
 import org.example.usermanagement.entity.User;
 import org.example.usermanagement.exception.CurrentUserNotFoundException;
+import org.example.usermanagement.exception.UserNotFoundException;
 import org.example.usermanagement.repository.UserRepository;
 import org.example.usermanagement.service.UserService;
 import org.springframework.stereotype.Service;
@@ -36,6 +38,54 @@ public class UserServiceImpl implements UserService {
         return mapToProfileResponse(user);
     }
 
+    @Override
+    @Transactional
+    public UserProfileResponse updateCurrentUserProfile(
+            String email,
+            UpdateProfileRequest request
+    ) {
+        String normalizedEmail =
+                normalizeEmail(email);
+
+        User user = userRepository
+                .findByEmailIgnoreCase(normalizedEmail)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "Không tìm thấy tài khoản đang đăng nhập"
+                        )
+                );
+
+        user.setFirstName(
+                normalizeText(request.getFirstName())
+        );
+
+        user.setLastName(
+                normalizeText(request.getLastName())
+        );
+
+        user.setDateOfBirth(
+                request.getDateOfBirth()
+        );
+
+        user.setGender(
+                request.getGender()
+        );
+
+        user.setAddress(
+                normalizeText(request.getAddress())
+        );
+
+        user.setPhone(
+                normalizePhone(request.getPhone())
+        );
+
+        user.setUpdatedBy(user.getId());
+        User updatedUser =
+                userRepository.saveAndFlush(user);
+
+        return mapToProfileResponse(updatedUser);
+    }
+
     private UserProfileResponse mapToProfileResponse(
             User user
     ) {
@@ -57,7 +107,9 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
-    private String normalizeEmail(String email) {
+    private String normalizeEmail(
+            String email
+    ) {
         if (email == null) {
             return "";
         }
@@ -65,5 +117,27 @@ public class UserServiceImpl implements UserService {
         return email
                 .trim()
                 .toLowerCase(Locale.ROOT);
+    }
+
+    private String normalizeText(
+            String value
+    ) {
+        if (value == null) {
+            return "";
+        }
+
+        return value
+                .trim()
+                .replaceAll("\\s+", " ");
+    }
+
+    private String normalizePhone(
+            String phone
+    ) {
+        if (phone == null) {
+            return "";
+        }
+
+        return phone.trim();
     }
 }

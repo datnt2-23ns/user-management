@@ -1,11 +1,5 @@
 package org.example.usermanagement.entity;
 
-import org.example.usermanagement.converter.RoleConverter;
-import org.example.usermanagement.converter.UserStatusConverter;
-import org.example.usermanagement.enums.Gender;
-import org.example.usermanagement.enums.Role;
-import org.example.usermanagement.enums.UserStatus;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -17,13 +11,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
+import org.example.usermanagement.converter.RoleConverter;
+import org.example.usermanagement.converter.UserStatusConverter;
+import org.example.usermanagement.enums.Gender;
+import org.example.usermanagement.enums.Role;
+import org.example.usermanagement.enums.UserStatus;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -48,7 +45,9 @@ import java.time.LocalDateTime;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(
+            strategy = GenerationType.IDENTITY
+    )
     private Long id;
 
     @Column(
@@ -118,6 +117,11 @@ public class User {
     @Builder.Default
     private UserStatus status = UserStatus.ACTIVE;
 
+    /*
+     * ID của người thực hiện lần cập nhật gần nhất.
+     * Khi User tự cập nhật hồ sơ:
+     * updatedBy = chính user.getId().
+     */
     @Column(name = "updated_by")
     private Long updatedBy;
 
@@ -127,13 +131,15 @@ public class User {
     @Column(name = "locked_at")
     private LocalDateTime lockedAt;
 
-
     @Column(name = "deleted_by")
     private Long deletedBy;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    /*
+     * Hibernate tự gán khi tạo bản ghi.
+     */
     @CreationTimestamp
     @Column(
             name = "created_at",
@@ -142,6 +148,9 @@ public class User {
     )
     private LocalDateTime createdAt;
 
+    /*
+     * Hibernate tự gán khi tạo và cập nhật bản ghi.
+     */
     @UpdateTimestamp
     @Column(
             name = "updated_at",
@@ -149,17 +158,23 @@ public class User {
     )
     private LocalDateTime updatedAt;
 
-
     @Transient
     public String getFullName() {
         String normalizedLastName =
-                lastName == null ? "" : lastName.trim();
+                lastName == null
+                        ? ""
+                        : lastName.trim();
 
         String normalizedFirstName =
-                firstName == null ? "" : firstName.trim();
+                firstName == null
+                        ? ""
+                        : firstName.trim();
 
-        return (normalizedLastName + " " + normalizedFirstName)
-                .trim();
+        return (
+                normalizedLastName
+                        + " "
+                        + normalizedFirstName
+        ).trim();
     }
 
     @Transient
