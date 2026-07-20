@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.example.usermanagement.dto.request.ChangePasswordRequest;
 
 @RestController
 @RequestMapping("/api/users")
@@ -63,6 +64,22 @@ public class UserController {
                                 userService.updateCurrentUserAvatar(
                                                 userDetails.getUsername(),
                                                 file));
+        }
+
+        @PutMapping("/me/password")
+        @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+        public ResponseEntity<Void> changeCurrentUserPassword(
+                        @AuthenticationPrincipal UserDetails userDetails,
+                        @Valid @RequestBody ChangePasswordRequest request) {
+                validatePrincipal(userDetails);
+
+                userService.changeCurrentUserPassword(
+                                userDetails.getUsername(),
+                                request);
+
+                return ResponseEntity
+                                .noContent()
+                                .build();
         }
 
         private void validatePrincipal(

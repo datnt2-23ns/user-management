@@ -8,8 +8,13 @@ import org.example.usermanagement.exception.UserNotFoundException;
 import org.example.usermanagement.repository.UserRepository;
 import org.example.usermanagement.service.AvatarStorageService;
 import org.example.usermanagement.service.UserService;
-import org.springframework.stereotype.Service;
+import org.example.usermanagement.dto.request.ChangePasswordRequest;
+import org.example.usermanagement.exception.InvalidPasswordChangeException;
+import org.example.usermanagement.enums.UserStatus;
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,6 +27,7 @@ public class UserServiceImpl implements UserService {
 
         private final UserRepository userRepository;
         private final AvatarStorageService avatarStorageService;
+        private final PasswordEncoder passwordEncoder;
 
         @Override
         @Transactional(readOnly = true)
@@ -107,6 +113,54 @@ public class UserServiceImpl implements UserService {
 
                         throw exception;
                 }
+        }
+
+        @Override
+        @Transactional
+        public void changeCurrentUserPassword(
+                        String email,
+                        ChangePasswordRequest request) {
+                String normalizedEmail = normalizeEmail(email);
+
+                User user = userRepository
+                                .findByEmailIgnoreCase(normalizedEmail)
+                                .orElseThrow(() -> new UserNotFoundException(
+                                                "Không tìm thấy tài khoản đang đăng nhập"));
+
+                if (user.getStatus() == UserStatus.LOCKED) {
+                        throw new LockedException(
+                                        "Tài khoản đã bị khóa");
+                }
+
+                if (!passwordEncoder.matches(
+                                request.currentPassword(),
+                                user.getPassword())) {
+                        throw new InvalidPasswordChangeException(
+                                        "Mật khẩu hiện tại không chính xác");
+                }
+
+                if (!request.newPassword().equals(
+                                request.confirmPassword())) {
+                        throw new InvalidPasswordChangeException(
+                                        "Mật khẩu xác nhận không khớp");
+                }
+
+                if (passwordEncoder.matches(
+                                request.newPassword(),
+                                user.getPassword())) {
+                        throw new InvalidPasswordChangeException(
+                                        "Mật khẩu mới phải khác mật khẩu hiện tại");
+                }
+
+                user.setPassword(
+                                passwordEncoder.encode(
+                                                request.newPassword()));
+
+                user.setUpdatedBy(
+                                user.getId());
+
+                userRepository.saveAndFlush(
+                                user);
         }
 
         private void registerAvatarCleanup(

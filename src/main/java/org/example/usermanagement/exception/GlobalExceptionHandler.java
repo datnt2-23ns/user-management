@@ -219,6 +219,15 @@ public class GlobalExceptionHandler {
                                 null);
         }
 
+        @ExceptionHandler(InvalidPasswordChangeException.class)
+        public ResponseEntity<ApiErrorResponse> handleInvalidPasswordChange(
+                        InvalidPasswordChangeException exception) {
+                return buildResponse(
+                                HttpStatus.BAD_REQUEST,
+                                exception.getMessage(),
+                                null);
+        }
+
         private ResponseEntity<ApiErrorResponse> buildResponse(
                         HttpStatus status,
                         String message,
