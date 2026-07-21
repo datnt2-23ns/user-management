@@ -206,6 +206,15 @@ public class GlobalExceptionHandler {
                                 null);
         }
 
+        @ExceptionHandler(InvalidUserListQueryException.class)
+        public ResponseEntity<ApiErrorResponse> handleInvalidUserListQuery(
+                        InvalidUserListQueryException exception) {
+                return buildResponse(
+                                HttpStatus.BAD_REQUEST,
+                                exception.getMessage(),
+                                null);
+        }
+
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ApiErrorResponse> handleUnexpectedException(
                         Exception exception) {
