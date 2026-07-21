@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Danh sách tài khoản</title>
+
+    <link rel="stylesheet" href="/css/main.css" />
+
+    <link rel="stylesheet" href="/css/admin-users.css" />
+  </head>
+  <body>
+    <div data-app-header></div>
+
+    <main class="admin-users-page">
+      <section class="admin-users-card">
+        <header class="page-heading">
+          <div>
+            <h1>Danh sách tài khoản</h1>
+
+            <p>Quản trị viên xem danh sách, phân trang và sắp xếp tài khoản.</p>
+          </div>
+        </header>
+
+        <form id="user-filter-form" class="filter-form" novalidate>
+          <div class="filter-grid">
+            <div class="form-group">
+              <label for="page-number"> Trang </label>
+
+              <input
+                id="page-number"
+                name="page"
+                type="number"
+                min="1"
+                value="1"
+              />
+
+              <span class="field-error" data-field-error="page"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="page-size"> Số dòng </label>
+
+              <select id="page-size" name="size">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+              </select>
+
+              <span class="field-error" data-field-error="size"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="role-filter"> Vai trò </label>
+
+              <select id="role-filter" name="role">
+                <option value="">Tất cả vai trò</option>
+
+                <option value="USER">User</option>
+
+                <option value="ADMIN">Admin</option>
+              </select>
+
+              <span class="field-error" data-field-error="role"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="status-filter"> Trạng thái </label>
+
+              <select id="status-filter" name="status">
+                <option value="">Tất cả trạng thái</option>
+
+                <option value="ACTIVE">Đang hoạt động</option>
+
+                <option value="LOCKED">Đã khóa</option>
+              </select>
+
+              <span class="field-error" data-field-error="status"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="sort-by"> Sắp xếp theo </label>
+
+              <select id="sort-by" name="sortBy">
+                <option value="createdAt">Ngày tạo</option>
+
+                <option value="updatedAt">Ngày cập nhật</option>
+
+                <option value="id">ID</option>
+
+                <option value="lastName">Họ và tên</option>
+
+                <option value="email">Email</option>
+
+                <option value="role">Vai trò</option>
+
+                <option value="status">Trạng thái</option>
+              </select>
+
+              <span class="field-error" data-field-error="sortBy"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="sort-direction"> Chiều sắp xếp </label>
+
+              <select id="sort-direction" name="direction">
+                <option value="desc">Giảm dần</option>
+
+                <option value="asc">Tăng dần</option>
+              </select>
+
+              <span class="field-error" data-field-error="direction"></span>
+            </div>
+          </div>
+
+          <div class="filter-actions">
+            <button id="filter-reset" class="button secondary" type="button">
+              Đặt lại
+            </button>
+
+            <button id="filter-submit" class="button primary" type="submit">
+              Áp dụng
+            </button>
+          </div>
+        </form>
+
+        <div
+          id="page-message"
+          class="page-message"
+          role="alert"
+          aria-live="polite"
+          hidden
+        ></div>
+
+        <div id="users-loading" class="users-state" hidden>
+          Đang tải danh sách tài khoản...
+        </div>
+
+        <div id="users-empty" class="users-state" hidden>
+          Không có tài khoản phù hợp.
+        </div>
+
+        <div id="users-content" hidden>
+          <div class="table-wrapper">
+            <table class="users-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Tài khoản</th>
+                  <th>Email</th>
+                  <th>Vai trò</th>
+                  <th>Trạng thái</th>
+                  <th>Ngày tạo</th>
+                </tr>
+              </thead>
+
+              <tbody id="users-table-body"></tbody>
+            </table>
+          </div>
+
+          <div class="pagination">
+            <button id="previous-page" class="button secondary" type="button">
+              Trang trước
+            </button>
+
+            <p id="pagination-info">Trang 1/1</p>
+
+            <button id="next-page" class="button secondary" type="button">
+              Trang sau
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div data-app-footer></div>
+
+    <script src="/js/layout.js"></script>
+
+    <script type="module" src="/js/auth-ui.js"></script>
+
+    <script type="module" src="/js/admin-users.js"></script>
+  </body>
+</html>

@@ -5,6 +5,8 @@ function renderAuthUi() {
 
   const userSection = document.querySelector("[data-auth-user]");
 
+  const adminOnlyElements = document.querySelectorAll("[data-admin-only]");
+
   if (!guestSection || !userSection) {
     return;
   }
@@ -12,9 +14,14 @@ function renderAuthUi() {
   const authenticated = isAuthenticated();
 
   guestSection.hidden = authenticated;
+
   userSection.hidden = !authenticated;
 
   if (!authenticated) {
+    adminOnlyElements.forEach((element) => {
+      element.hidden = true;
+    });
+
     return;
   }
 
@@ -26,9 +33,25 @@ function renderAuthUi() {
     userNameElement.textContent =
       currentUser?.fullName || currentUser?.email || "Người dùng";
   }
+
+  const normalizedRole = String(currentUser?.role || "")
+    .replace("ROLE_", "")
+    .toUpperCase();
+
+  const isAdmin = normalizedRole === "ADMIN";
+
+  adminOnlyElements.forEach((element) => {
+    element.hidden = !isAdmin;
+  });
 }
 
-document.addEventListener("DOMContentLoaded", renderAuthUi);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", renderAuthUi, {
+    once: true,
+  });
+} else {
+  renderAuthUi();
+}
 
 document.addEventListener("click", (event) => {
   const logoutButton = event.target.closest("[data-logout-button]");

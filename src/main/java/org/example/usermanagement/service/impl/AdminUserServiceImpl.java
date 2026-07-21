@@ -12,7 +12,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.criteria.Predicate;
+import org.example.usermanagement.enums.Role;
+import org.example.usermanagement.enums.UserStatus;
+import org.springframework.data.jpa.domain.Specification;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 @Service
@@ -39,6 +46,8 @@ public class AdminUserServiceImpl
         public PageResponse<AdminUserListItemResponse> getUsers(
                         int page,
                         int size,
+                        String role,
+                        String status,
                         String sortBy,
                         String direction) {
                 validatePagination(
@@ -51,6 +60,10 @@ public class AdminUserServiceImpl
                 Sort.Direction sortDirection = parseSortDirection(
                                 direction);
 
+                Role parsedRole = parseRole(role);
+
+                UserStatus parsedStatus = parseStatus(status);
+
                 PageRequest pageRequest = PageRequest.of(
                                 page,
                                 size,
@@ -58,8 +71,14 @@ public class AdminUserServiceImpl
                                                 sortDirection,
                                                 validatedSortField));
 
+                Specification<User> specification = buildSpecification(
+                                parsedRole,
+                                parsedStatus);
+
                 Page<AdminUserListItemResponse> userPage = userRepository
-                                .findAll(pageRequest)
+                                .findAll(
+                                                specification,
+                                                pageRequest)
                                 .map(this::mapToResponse);
 
                 return PageResponse.from(
@@ -122,5 +141,67 @@ public class AdminUserServiceImpl
                                 user.getStatus(),
                                 user.getCreatedAt(),
                                 user.getUpdatedAt());
+        }
+
+        private Role parseRole(
+                        String role) {
+                if (role == null
+                                || role.isBlank()) {
+                        return null;
+                }
+
+                try {
+                        return Role.valueOf(
+                                        role.trim()
+                                                        .toUpperCase(
+                                                                        Locale.ROOT));
+                } catch (IllegalArgumentException exception) {
+                        throw new InvalidUserListQueryException(
+                                        "Vai trò chỉ nhận USER hoặc ADMIN");
+                }
+        }
+
+        private UserStatus parseStatus(
+                        String status) {
+                if (status == null
+                                || status.isBlank()) {
+                        return null;
+                }
+
+                try {
+                        return UserStatus.valueOf(
+                                        status.trim()
+                                                        .toUpperCase(
+                                                                        Locale.ROOT));
+                } catch (IllegalArgumentException exception) {
+                        throw new InvalidUserListQueryException(
+                                        "Trạng thái chỉ nhận ACTIVE hoặc LOCKED");
+                }
+        }
+
+        private Specification<User> buildSpecification(
+                        Role role,
+                        UserStatus status) {
+                return (root, query, criteriaBuilder) -> {
+                        List<Predicate> predicates = new ArrayList<>();
+
+                        if (role != null) {
+                                predicates.add(
+                                                criteriaBuilder.equal(
+                                                                root.get("role"),
+                                                                role));
+                        }
+
+                        if (status != null) {
+                                predicates.add(
+                                                criteriaBuilder.equal(
+                                                                root.get("status"),
+                                                                status));
+                        }
+
+                        return criteriaBuilder.and(
+                                        predicates.toArray(
+                                                        new Predicate[0]));
+                };
         }
 }
