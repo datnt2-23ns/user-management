@@ -20,12 +20,27 @@
           <div>
             <h1>Danh sách tài khoản</h1>
 
-            <p>Quản trị viên xem danh sách, phân trang và sắp xếp tài khoản.</p>
+            <p>Quản trị viên tìm kiếm, lọc, phân trang và sắp xếp tài khoản.</p>
           </div>
         </header>
 
         <form id="user-filter-form" class="filter-form" novalidate>
           <div class="filter-grid">
+            <div class="form-group full-width">
+              <label for="keyword"> Tìm kiếm </label>
+
+              <input
+                id="keyword"
+                name="keyword"
+                type="search"
+                maxlength="100"
+                placeholder="Nhập họ tên, email hoặc số điện thoại"
+                autocomplete="off"
+              />
+
+              <span class="field-error" data-field-error="keyword"></span>
+            </div>
+
             <div class="form-group">
               <label for="page-number"> Trang </label>
 

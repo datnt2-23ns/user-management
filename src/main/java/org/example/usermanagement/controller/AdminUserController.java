@@ -25,6 +25,8 @@ public class AdminUserController {
 
                         @RequestParam(defaultValue = "10") int size,
 
+                        @RequestParam(defaultValue = "") String keyword,
+
                         @RequestParam(defaultValue = "") String role,
 
                         @RequestParam(defaultValue = "") String status,
@@ -36,6 +38,7 @@ public class AdminUserController {
                                 adminUserService.getUsers(
                                                 page,
                                                 size,
+                                                keyword,
                                                 role,
                                                 status,
                                                 sortBy,

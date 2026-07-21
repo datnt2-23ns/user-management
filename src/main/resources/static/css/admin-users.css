@@ -69,6 +69,10 @@
   border-color: #dc2626;
 }
 
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
 .field-error {
   display: block;
   min-height: 18px;
@@ -246,5 +250,9 @@
 
   .button {
     width: 100%;
+  }
+
+  .form-group.full-width {
+    grid-column: auto;
   }
 }

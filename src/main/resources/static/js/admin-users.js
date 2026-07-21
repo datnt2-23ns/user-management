@@ -4,6 +4,8 @@ import { clearAuthSession, isAuthenticated } from "/js/auth.js";
 
 const REQUEST_TIMEOUT_MS = 5000;
 
+const MAX_KEYWORD_LENGTH = 100;
+
 const ALLOWED_PAGE_SIZES = new Set([5, 10, 20, 50]);
 
 const ALLOWED_ROLES = new Set(["", "USER", "ADMIN"]);
@@ -25,6 +27,8 @@ const ALLOWED_DIRECTIONS = new Set(["asc", "desc"]);
 const DEFAULT_AVATAR_URL = "/images/default-avatar.svg";
 
 const filterForm = document.getElementById("user-filter-form");
+
+const keywordInput = document.getElementById("keyword");
 
 const pageInput = document.getElementById("page-number");
 
@@ -58,8 +62,6 @@ const nextButton = document.getElementById("next-page");
 
 const paginationInfo = document.getElementById("pagination-info");
 
-let currentPageData = null;
-
 initializePage().catch(handleInitializationError);
 
 async function initializePage() {
@@ -77,6 +79,7 @@ async function initializePage() {
 function validateRequiredElements() {
   const requiredElements = {
     filterForm,
+    keywordInput,
     pageInput,
     sizeInput,
     roleInput,
@@ -115,6 +118,12 @@ function registerEventListeners() {
 async function handleFilterSubmit(event) {
   event.preventDefault();
 
+  /*
+   * Khi thay đổi tìm kiếm hoặc bộ lọc,
+   * luôn quay lại trang đầu tiên.
+   */
+  pageInput.value = "1";
+
   await loadUsers();
 }
 
@@ -124,12 +133,12 @@ async function loadUsers() {
 
   const filterData = readFilterData();
 
-  const errors = validateFilterData(filterData);
+  const validationErrors = validateFilterData(filterData);
 
-  if (Object.keys(errors).length > 0) {
-    renderFieldErrors(errors);
+  if (Object.keys(validationErrors).length > 0) {
+    renderFieldErrors(validationErrors);
 
-    showMessage("Vui lòng kiểm tra lại điều kiện lọc.", "error");
+    showMessage("Vui lòng kiểm tra lại điều kiện tìm kiếm và lọc.", "error");
 
     return;
   }
@@ -137,14 +146,12 @@ async function loadUsers() {
   showLoadingState(true);
 
   try {
-    const query = buildQueryString(filterData);
+    const queryString = buildQueryString(filterData);
 
-    const pageData = await apiRequest(`/admin/users?${query}`, {
+    const pageData = await apiRequest(`/admin/users?${queryString}`, {
       method: "GET",
       timeoutMs: REQUEST_TIMEOUT_MS,
     });
-
-    currentPageData = pageData;
 
     renderPage(pageData);
   } catch (error) {
@@ -156,6 +163,8 @@ async function loadUsers() {
 
 function readFilterData() {
   return {
+    keyword: normalizeKeyword(keywordInput.value),
+
     page: Number(pageInput.value),
 
     size: Number(sizeInput.value),
@@ -170,8 +179,16 @@ function readFilterData() {
   };
 }
 
+function normalizeKeyword(value) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
 function validateFilterData(data) {
   const errors = {};
+
+  if (data.keyword.length > MAX_KEYWORD_LENGTH) {
+    errors.keyword = "Từ khóa tìm kiếm không được vượt quá 100 ký tự.";
+  }
 
   if (!Number.isInteger(data.page) || data.page < 1) {
     errors.page = "Số trang phải là số nguyên từ 1 trở lên.";
@@ -203,6 +220,10 @@ function validateFilterData(data) {
 function buildQueryString(data) {
   const params = new URLSearchParams();
 
+  /*
+   * Giao diện tính trang từ 1,
+   * Spring Data tính trang từ 0.
+   */
   params.set("page", String(data.page - 1));
 
   params.set("size", String(data.size));
@@ -210,6 +231,10 @@ function buildQueryString(data) {
   params.set("sortBy", data.sortBy);
 
   params.set("direction", data.direction);
+
+  if (data.keyword) {
+    params.set("keyword", data.keyword);
+  }
 
   if (data.role) {
     params.set("role", data.role);
@@ -224,6 +249,22 @@ function buildQueryString(data) {
 
 function renderPage(pageData) {
   const users = Array.isArray(pageData?.content) ? pageData.content : [];
+
+  const currentPage = pageData?.page ?? pageData?.number ?? 0;
+
+  const totalPages = pageData?.totalPages ?? 0;
+
+  const totalElements = pageData?.totalElements ?? users.length;
+
+  pageInput.value = String(currentPage + 1);
+
+  paginationInfo.textContent =
+    `Trang ${currentPage + 1}/${Math.max(totalPages, 1)}` +
+    ` — Tổng ${totalElements} tài khoản`;
+
+  previousButton.disabled = pageData?.first ?? currentPage <= 0;
+
+  nextButton.disabled = pageData?.last ?? currentPage + 1 >= totalPages;
 
   tableBody.replaceChildren();
 
@@ -240,20 +281,6 @@ function renderPage(pageData) {
 
   emptyElement.hidden = true;
   contentElement.hidden = false;
-
-  const currentPage = pageData.page ?? pageData.number ?? 0;
-
-  const totalPages = pageData.totalPages ?? 0;
-
-  paginationInfo.textContent =
-    `Trang ${currentPage + 1}/${Math.max(totalPages, 1)}` +
-    ` — Tổng ${pageData.totalElements ?? users.length} tài khoản`;
-
-  previousButton.disabled = pageData.first ?? currentPage <= 0;
-
-  nextButton.disabled = pageData.last ?? currentPage + 1 >= totalPages;
-
-  pageInput.value = String(currentPage + 1);
 }
 
 function createUserRow(user) {
@@ -271,28 +298,25 @@ function createUserRow(user) {
 
   avatar.className = "user-avatar";
 
-  avatar.alt = "Ảnh đại diện";
+  avatar.alt = `Ảnh đại diện của ${
+    user.fullName || user.email || "người dùng"
+  }`;
 
   avatar.src = normalizeAvatarUrl(user.avatarUrl);
 
-  avatar.addEventListener(
-    "error",
-    () => {
-      avatar.src = DEFAULT_AVATAR_URL;
-    },
-    {
-      once: true,
-    },
-  );
+  avatar.addEventListener("error", () => {
+    if (avatar.getAttribute("src") === DEFAULT_AVATAR_URL) {
+      return;
+    }
+
+    avatar.src = DEFAULT_AVATAR_URL;
+  });
 
   const name = document.createElement("span");
 
   name.className = "user-name";
 
-  name.textContent =
-    user.fullName ||
-    `${user.lastName ?? ""} ${user.firstName ?? ""}`.trim() ||
-    "Người dùng";
+  name.textContent = user.fullName || buildFullName(user) || "Người dùng";
 
   accountWrapper.append(avatar, name);
 
@@ -323,6 +347,12 @@ function createUserRow(user) {
   return row;
 }
 
+function buildFullName(user) {
+  return `${user.lastName ?? ""} ${user.firstName ?? ""}`
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
 function createTextCell(value) {
   const cell = document.createElement("td");
 
@@ -348,7 +378,7 @@ function createBadgeCell(text, className) {
 async function goToPreviousPage() {
   const currentPage = Number(pageInput.value);
 
-  if (currentPage <= 1) {
+  if (!Number.isInteger(currentPage) || currentPage <= 1) {
     return;
   }
 
@@ -360,12 +390,17 @@ async function goToPreviousPage() {
 async function goToNextPage() {
   const currentPage = Number(pageInput.value);
 
+  if (!Number.isInteger(currentPage) || nextButton.disabled) {
+    return;
+  }
+
   pageInput.value = String(currentPage + 1);
 
   await loadUsers();
 }
 
 async function resetFilters() {
+  keywordInput.value = "";
   pageInput.value = "1";
   sizeInput.value = "10";
   roleInput.value = "";
@@ -413,6 +448,9 @@ function showLoadingState(loading) {
   if (loading) {
     emptyElement.hidden = true;
     contentElement.hidden = true;
+
+    previousButton.disabled = true;
+    nextButton.disabled = true;
   }
 
   submitButton.disabled = loading;
@@ -435,7 +473,10 @@ function handleApiError(error) {
   }
 
   if (error.code === "NETWORK_ERROR") {
-    showMessage("Không thể kết nối đến máy chủ.", "error");
+    showMessage(
+      "Không thể kết nối đến máy chủ. Hãy kiểm tra Backend đang chạy.",
+      "error",
+    );
 
     return;
   }
@@ -456,7 +497,10 @@ function handleApiError(error) {
   if (error.status === 401) {
     clearAuthSession();
 
-    showMessage("Phiên đăng nhập không hợp lệ hoặc đã hết hạn.", "error");
+    showMessage(
+      error.data?.message || "Phiên đăng nhập không hợp lệ hoặc đã hết hạn.",
+      "error",
+    );
 
     window.setTimeout(redirectToLogin, 1500);
 
@@ -464,7 +508,10 @@ function handleApiError(error) {
   }
 
   if (error.status === 403) {
-    showMessage("Bạn không có quyền xem danh sách tài khoản.", "error");
+    showMessage(
+      error.data?.message || "Bạn không có quyền xem danh sách tài khoản.",
+      "error",
+    );
 
     return;
   }
@@ -482,9 +529,13 @@ function handleApiError(error) {
 }
 
 function showMessage(message, type) {
+  if (!pageMessageElement) {
+    return;
+  }
+
   pageMessageElement.textContent = message;
 
-  pageMessageElement.classList.remove("error");
+  pageMessageElement.classList.remove("success", "error");
 
   pageMessageElement.classList.add(type);
 
@@ -492,10 +543,14 @@ function showMessage(message, type) {
 }
 
 function hideMessage() {
+  if (!pageMessageElement) {
+    return;
+  }
+
   pageMessageElement.textContent = "";
   pageMessageElement.hidden = true;
 
-  pageMessageElement.classList.remove("error");
+  pageMessageElement.classList.remove("success", "error");
 }
 
 function normalizeAvatarUrl(url) {
@@ -505,19 +560,39 @@ function normalizeAvatarUrl(url) {
 
   const normalized = url.trim();
 
-  return normalized.startsWith("/") ||
+  if (
+    normalized.startsWith("/") ||
     normalized.startsWith("http://") ||
     normalized.startsWith("https://")
-    ? normalized
-    : `/${normalized}`;
+  ) {
+    return normalized;
+  }
+
+  return `/${normalized}`;
 }
 
 function formatRole(role) {
-  return role === "ADMIN" ? "Admin" : "User";
+  if (role === "ADMIN") {
+    return "Admin";
+  }
+
+  if (role === "USER") {
+    return "User";
+  }
+
+  return role || "—";
 }
 
 function formatStatus(status) {
-  return status === "LOCKED" ? "Đã khóa" : "Đang hoạt động";
+  if (status === "ACTIVE") {
+    return "Đang hoạt động";
+  }
+
+  if (status === "LOCKED") {
+    return "Đã khóa";
+  }
+
+  return status || "—";
 }
 
 function formatDateTime(value) {
@@ -539,6 +614,18 @@ function formatDateTime(value) {
 
 function handleInitializationError(error) {
   console.error("Admin user page initialization error:", error);
+
+  if (loadingElement) {
+    loadingElement.hidden = true;
+  }
+
+  if (contentElement) {
+    contentElement.hidden = true;
+  }
+
+  if (emptyElement) {
+    emptyElement.hidden = true;
+  }
 
   showMessage(
     error.message || "Không thể khởi tạo trang danh sách tài khoản.",

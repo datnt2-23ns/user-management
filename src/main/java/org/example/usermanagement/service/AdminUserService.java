@@ -8,6 +8,7 @@ public interface AdminUserService {
     PageResponse<AdminUserListItemResponse> getUsers(
             int page,
             int size,
+            String keyword,
             String role,
             String status,
             String sortBy,

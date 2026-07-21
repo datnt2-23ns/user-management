@@ -16,6 +16,7 @@ import jakarta.persistence.criteria.Predicate;
 import org.example.usermanagement.enums.Role;
 import org.example.usermanagement.enums.UserStatus;
 import org.springframework.data.jpa.domain.Specification;
+import jakarta.persistence.criteria.Expression;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,19 +47,18 @@ public class AdminUserServiceImpl
         public PageResponse<AdminUserListItemResponse> getUsers(
                         int page,
                         int size,
+                        String keyword,
                         String role,
                         String status,
                         String sortBy,
                         String direction) {
-                validatePagination(
-                                page,
-                                size);
+                validatePagination(page, size);
 
-                String validatedSortField = validateSortField(
-                                sortBy);
+                String normalizedKeyword = normalizeKeyword(keyword);
 
-                Sort.Direction sortDirection = parseSortDirection(
-                                direction);
+                String validatedSortField = validateSortField(sortBy);
+
+                Sort.Direction sortDirection = parseSortDirection(direction);
 
                 Role parsedRole = parseRole(role);
 
@@ -72,6 +72,7 @@ public class AdminUserServiceImpl
                                                 validatedSortField));
 
                 Specification<User> specification = buildSpecification(
+                                normalizedKeyword,
                                 parsedRole,
                                 parsedStatus);
 
@@ -81,8 +82,25 @@ public class AdminUserServiceImpl
                                                 pageRequest)
                                 .map(this::mapToResponse);
 
-                return PageResponse.from(
-                                userPage);
+                return PageResponse.from(userPage);
+        }
+
+        private String normalizeKeyword(
+                        String keyword) {
+                if (keyword == null) {
+                        return "";
+                }
+
+                String normalized = keyword
+                                .trim()
+                                .replaceAll("\\s+", " ");
+
+                if (normalized.length() > 100) {
+                        throw new InvalidUserListQueryException(
+                                        "Từ khóa tìm kiếm không được vượt quá 100 ký tự");
+                }
+
+                return normalized;
         }
 
         private void validatePagination(
@@ -180,10 +198,47 @@ public class AdminUserServiceImpl
         }
 
         private Specification<User> buildSpecification(
+                        String keyword,
                         Role role,
                         UserStatus status) {
                 return (root, query, criteriaBuilder) -> {
                         List<Predicate> predicates = new ArrayList<>();
+
+                        if (keyword != null
+                                        && !keyword.isBlank()) {
+                                String pattern = "%"
+                                                + keyword.toLowerCase(Locale.ROOT)
+                                                + "%";
+
+                                Expression<String> fullName = criteriaBuilder.lower(
+                                                criteriaBuilder.concat(
+                                                                criteriaBuilder.concat(
+                                                                                root.get("lastName"),
+                                                                                " "),
+                                                                root.get("firstName")));
+
+                                Predicate keywordPredicate = criteriaBuilder.or(
+                                                criteriaBuilder.like(
+                                                                criteriaBuilder.lower(
+                                                                                root.get("firstName")),
+                                                                pattern),
+                                                criteriaBuilder.like(
+                                                                criteriaBuilder.lower(
+                                                                                root.get("lastName")),
+                                                                pattern),
+                                                criteriaBuilder.like(
+                                                                fullName,
+                                                                pattern),
+                                                criteriaBuilder.like(
+                                                                criteriaBuilder.lower(
+                                                                                root.get("email")),
+                                                                pattern),
+                                                criteriaBuilder.like(
+                                                                root.get("phone"),
+                                                                pattern));
+
+                                predicates.add(keywordPredicate);
+                        }
 
                         if (role != null) {
                                 predicates.add(
