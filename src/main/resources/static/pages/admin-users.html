@@ -158,6 +158,14 @@
           Không có tài khoản phù hợp.
         </div>
 
+        <div
+          id="users-action-message"
+          class="action-message"
+          role="alert"
+          aria-live="polite"
+          hidden
+        ></div>
+
         <div id="users-content" hidden>
           <div class="table-wrapper">
             <table class="users-table">
@@ -191,6 +199,44 @@
         </div>
       </section>
     </main>
+
+    <div
+      id="delete-confirm-dialog"
+      class="confirm-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="delete-dialog-title"
+      hidden
+    >
+      <div class="confirm-dialog__backdrop" data-delete-dialog-close></div>
+
+      <section class="confirm-dialog__content">
+        <h2 id="delete-dialog-title">Xác nhận xóa tài khoản</h2>
+
+        <p id="delete-dialog-message">
+          Bạn có chắc chắn muốn xóa tài khoản này?
+        </p>
+
+        <p class="confirm-dialog__warning">
+          Tài khoản sau khi xóa sẽ không thể đăng nhập hoặc tiếp tục sử dụng
+          token cũ.
+        </p>
+
+        <div class="confirm-dialog__actions">
+          <button
+            id="cancel-delete-user"
+            class="button secondary"
+            type="button"
+          >
+            Hủy
+          </button>
+
+          <button id="confirm-delete-user" class="button danger" type="button">
+            Xóa tài khoản
+          </button>
+        </div>
+      </section>
+    </div>
 
     <div data-app-footer></div>
 

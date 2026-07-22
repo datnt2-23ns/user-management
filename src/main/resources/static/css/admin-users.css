@@ -237,6 +237,128 @@
   background: #1d4ed8;
 }
 
+.action-message {
+  margin-bottom: 18px;
+  padding: 13px 15px;
+  border-radius: 8px;
+  line-height: 1.5;
+}
+
+.action-message.success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.action-message.error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.user-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.delete-user-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 7px 11px;
+  border: 0;
+  border-radius: 7px;
+  background: #dc2626;
+  color: #ffffff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.delete-user-button:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.delete-user-button:disabled {
+  cursor: not-allowed;
+  background: #d1d5db;
+  color: #6b7280;
+  opacity: 0.75;
+}
+
+.button.danger {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.button.danger:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.confirm-dialog {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.confirm-dialog__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.58);
+}
+
+.confirm-dialog__content {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 440px);
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 20px 55px rgba(15, 23, 42, 0.3);
+}
+
+.confirm-dialog__content h2 {
+  margin: 0 0 12px;
+  font-size: 21px;
+}
+
+.confirm-dialog__content p {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+.confirm-dialog__warning {
+  margin-top: 12px !important;
+  padding: 11px 13px;
+  border-radius: 8px;
+  background: #fff7ed;
+  color: #9a3412 !important;
+}
+
+.confirm-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+body.dialog-open {
+  overflow: hidden;
+}
+
 [hidden] {
   display: none !important;
 }
@@ -244,6 +366,26 @@
 @media (max-width: 850px) {
   .filter-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .user-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .user-actions a,
+  .user-actions button {
+    width: 100%;
+  }
+
+  .confirm-dialog__actions {
+    flex-direction: column-reverse;
+  }
+
+  .confirm-dialog__actions .button {
+    width: 100%;
   }
 }
 

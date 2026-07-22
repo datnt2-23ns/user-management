@@ -1,6 +1,6 @@
 import { apiRequest } from "/js/api.js";
 
-import { clearAuthSession, isAuthenticated } from "/js/auth.js";
+import { clearAuthSession, getCurrentUser, isAuthenticated } from "/js/auth.js";
 
 const REQUEST_TIMEOUT_MS = 5000;
 
@@ -62,6 +62,20 @@ const nextButton = document.getElementById("next-page");
 
 const paginationInfo = document.getElementById("pagination-info");
 
+const actionMessageElement = document.getElementById("users-action-message");
+
+const deleteConfirmDialog = document.getElementById("delete-confirm-dialog");
+
+const deleteDialogTitle = document.getElementById("delete-dialog-title");
+
+const deleteDialogMessage = document.getElementById("delete-dialog-message");
+
+const cancelDeleteButton = document.getElementById("cancel-delete-user");
+
+const confirmDeleteButton = document.getElementById("confirm-delete-user");
+
+let userPendingDelete = null;
+
 initializePage().catch(handleInitializationError);
 
 async function initializePage() {
@@ -72,6 +86,7 @@ async function initializePage() {
 
   validateRequiredElements();
   registerEventListeners();
+  registerDeleteEventListeners();
 
   await loadUsers();
 }
@@ -96,6 +111,12 @@ function validateRequiredElements() {
     previousButton,
     nextButton,
     paginationInfo,
+    actionMessageElement,
+    deleteConfirmDialog,
+    deleteDialogTitle,
+    deleteDialogMessage,
+    cancelDeleteButton,
+    confirmDeleteButton,
   };
 
   for (const [name, element] of Object.entries(requiredElements)) {
@@ -118,10 +139,6 @@ function registerEventListeners() {
 async function handleFilterSubmit(event) {
   event.preventDefault();
 
-  /*
-   * Khi thay đổi tìm kiếm hoặc bộ lọc,
-   * luôn quay lại trang đầu tiên.
-   */
   pageInput.value = "1";
 
   await loadUsers();
@@ -220,10 +237,6 @@ function validateFilterData(data) {
 function buildQueryString(data) {
   const params = new URLSearchParams();
 
-  /*
-   * Giao diện tính trang từ 1,
-   * Spring Data tính trang từ 0.
-   */
   params.set("page", String(data.page - 1));
 
   params.set("size", String(data.size));
@@ -344,23 +357,33 @@ function createUserRow(user) {
 
   row.appendChild(createTextCell(formatDateTime(user.createdAt)));
 
-  row.appendChild(createActionCell(user.id));
+  row.appendChild(createActionCell(user));
 
   return row;
 }
 
-function createActionCell(userId) {
+function createActionCell(user) {
   const cell = document.createElement("td");
+
+  const actions = document.createElement("div");
+
+  actions.className = "user-actions";
 
   const detailLink = document.createElement("a");
 
   detailLink.className = "detail-link";
 
-  detailLink.href = `/pages/admin-user-detail.html?id=${encodeURIComponent(userId)}`;
+  detailLink.href = `/pages/admin-user-detail.html?id=${encodeURIComponent(
+    user.id,
+  )}`;
 
   detailLink.textContent = "Xem chi tiết";
 
-  cell.appendChild(detailLink);
+  const deleteButton = createDeleteButton(user);
+
+  actions.append(detailLink, deleteButton);
+
+  cell.appendChild(actions);
 
   return cell;
 }
@@ -653,4 +676,274 @@ function handleInitializationError(error) {
 
 function redirectToLogin() {
   window.location.replace("/pages/login.html");
+}
+
+function registerDeleteEventListeners() {
+  cancelDeleteButton.addEventListener("click", closeDeleteDialog);
+
+  confirmDeleteButton.addEventListener("click", confirmDeleteUser);
+
+  document.querySelectorAll("[data-delete-dialog-close]").forEach((element) => {
+    element.addEventListener("click", closeDeleteDialog);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !deleteConfirmDialog.hidden) {
+      closeDeleteDialog();
+    }
+  });
+}
+
+function createDeleteButton(user) {
+  const button = document.createElement("button");
+
+  button.type = "button";
+
+  button.className = "delete-user-button";
+
+  const currentUser = getCurrentUser();
+
+  const isCurrentAccount = isSameAccount(currentUser, user);
+
+  if (isCurrentAccount) {
+    button.disabled = true;
+
+    button.textContent = "Không thể tự xóa";
+
+    button.title = "Quản trị viên không thể tự xóa tài khoản của mình";
+
+    return button;
+  }
+
+  button.textContent = "Xóa";
+
+  button.title = `Xóa tài khoản ${getUserDisplayName(user)}`;
+
+  button.addEventListener("click", () => openDeleteDialog(user));
+
+  return button;
+}
+
+function isSameAccount(currentUser, targetUser) {
+  const currentUserId = Number(currentUser?.id);
+
+  const targetUserId = Number(targetUser?.id);
+
+  const sameId =
+    Number.isSafeInteger(currentUserId) &&
+    Number.isSafeInteger(targetUserId) &&
+    currentUserId === targetUserId;
+
+  const currentEmail = normalizeEmail(currentUser?.email);
+
+  const targetEmail = normalizeEmail(targetUser?.email);
+
+  const sameEmail = currentEmail !== "" && currentEmail === targetEmail;
+
+  return sameId || sameEmail;
+}
+
+function normalizeEmail(email) {
+  return typeof email === "string" ? email.trim().toLowerCase() : "";
+}
+
+function getUserDisplayName(user) {
+  return (
+    user.fullName ||
+    `${user.lastName ?? ""} ${user.firstName ?? ""}`
+      .trim()
+      .replace(/\s+/g, " ") ||
+    user.email ||
+    `ID ${user.id}`
+  );
+}
+
+function openDeleteDialog(user) {
+  const currentUser = getCurrentUser();
+
+  if (!user || isSameAccount(currentUser, user)) {
+    showActionMessage(
+      "Quản trị viên không thể tự xóa tài khoản của mình.",
+      "error",
+    );
+
+    return;
+  }
+
+  userPendingDelete = user;
+
+  const displayName = getUserDisplayName(user);
+
+  deleteDialogTitle.textContent = "Xác nhận xóa tài khoản";
+
+  deleteDialogMessage.textContent = `Bạn có chắc chắn muốn xóa tài khoản “${displayName}”?`;
+
+  deleteConfirmDialog.hidden = false;
+
+  document.body.classList.add("dialog-open");
+
+  confirmDeleteButton.focus();
+}
+
+function closeDeleteDialog() {
+  deleteConfirmDialog.hidden = true;
+
+  document.body.classList.remove("dialog-open");
+
+  userPendingDelete = null;
+
+  setDeleteLoading(false);
+}
+
+async function confirmDeleteUser() {
+  if (!userPendingDelete) {
+    return;
+  }
+
+  const userId = userPendingDelete.id;
+
+  const displayName = getUserDisplayName(userPendingDelete);
+
+  setDeleteLoading(true);
+
+  try {
+    await apiRequest(`/admin/users/${encodeURIComponent(userId)}`, {
+      method: "DELETE",
+      timeoutMs: REQUEST_TIMEOUT_MS,
+    });
+
+    closeDeleteDialog();
+
+    showActionMessage(
+      `Đã xóa tài khoản “${displayName}” thành công.`,
+      "success",
+    );
+
+    await refreshUserListAfterDelete();
+  } catch (error) {
+    setDeleteLoading(false);
+    handleDeleteError(error);
+  }
+}
+
+async function refreshUserListAfterDelete() {
+  const currentPage = Number(pageInput.value);
+
+  const visibleRowCount = tableBody.children.length;
+
+  if (
+    visibleRowCount === 1 &&
+    Number.isInteger(currentPage) &&
+    currentPage > 1
+  ) {
+    pageInput.value = String(currentPage - 1);
+  }
+
+  await loadUsers();
+}
+
+function setDeleteLoading(loading) {
+  confirmDeleteButton.disabled = loading;
+
+  cancelDeleteButton.disabled = loading;
+
+  confirmDeleteButton.textContent = loading ? "Đang xóa..." : "Xóa tài khoản";
+}
+
+function handleDeleteError(error) {
+  console.error("Delete admin user error:", error);
+
+  if (error.code === "TIMEOUT") {
+    showActionMessage("Máy chủ phản hồi quá lâu. Vui lòng thử lại.", "error");
+
+    return;
+  }
+
+  if (error.code === "NETWORK_ERROR") {
+    showActionMessage("Không thể kết nối đến máy chủ.", "error");
+
+    return;
+  }
+
+  if (error.status === 400) {
+    closeDeleteDialog();
+
+    showActionMessage(
+      error.data?.message || "Không thể xóa tài khoản này.",
+      "error",
+    );
+
+    return;
+  }
+
+  if (error.status === 401) {
+    closeDeleteDialog();
+    clearAuthSession();
+
+    showActionMessage("Phiên đăng nhập không hợp lệ hoặc đã hết hạn.", "error");
+
+    window.setTimeout(() => {
+      window.location.replace("/pages/login.html");
+    }, 1500);
+
+    return;
+  }
+
+  if (error.status === 403) {
+    closeDeleteDialog();
+
+    showActionMessage(
+      error.data?.message || "Bạn không có quyền xóa tài khoản.",
+      "error",
+    );
+
+    return;
+  }
+
+  if (error.status === 404) {
+    closeDeleteDialog();
+
+    showActionMessage(
+      error.data?.message || "Không tìm thấy tài khoản cần xóa.",
+      "error",
+    );
+
+    loadUsers().catch(console.error);
+
+    return;
+  }
+
+  if (error.status === 500) {
+    showActionMessage(
+      error.data?.message || "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.",
+      "error",
+    );
+
+    return;
+  }
+
+  showActionMessage(error.message || "Không thể xóa tài khoản.", "error");
+}
+
+function showActionMessage(message, type) {
+  actionMessageElement.textContent = message;
+
+  actionMessageElement.classList.remove("success", "error");
+
+  actionMessageElement.classList.add(type);
+
+  actionMessageElement.hidden = false;
+
+  actionMessageElement.scrollIntoView({
+    behavior: "smooth",
+    block: "nearest",
+  });
+}
+
+function hideActionMessage() {
+  actionMessageElement.textContent = "";
+
+  actionMessageElement.hidden = true;
+
+  actionMessageElement.classList.remove("success", "error");
 }
