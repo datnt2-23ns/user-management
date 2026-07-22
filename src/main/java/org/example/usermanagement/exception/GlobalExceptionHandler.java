@@ -258,6 +258,15 @@ public class GlobalExceptionHandler {
                                 null);
         }
 
+        @ExceptionHandler(SelfDeleteNotAllowedException.class)
+        public ResponseEntity<ApiErrorResponse> handleSelfDeleteNotAllowed(
+                        SelfDeleteNotAllowedException exception) {
+                return buildResponse(
+                                HttpStatus.BAD_REQUEST,
+                                exception.getMessage(),
+                                null);
+        }
+
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ApiErrorResponse> handleUnexpectedException(
                         Exception exception) {
