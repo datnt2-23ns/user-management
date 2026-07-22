@@ -3,6 +3,8 @@ package org.example.usermanagement.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.example.usermanagement.dto.response.AdminUserListItemResponse;
 import org.example.usermanagement.dto.response.PageResponse;
+import org.example.usermanagement.dto.response.AdminUserDetailResponse;
+import org.example.usermanagement.exception.AdminUserNotFoundException;
 import org.example.usermanagement.entity.User;
 import org.example.usermanagement.exception.InvalidUserListQueryException;
 import org.example.usermanagement.repository.UserRepository;
@@ -83,6 +85,40 @@ public class AdminUserServiceImpl
                                 .map(this::mapToResponse);
 
                 return PageResponse.from(userPage);
+        }
+
+        @Override
+        @Transactional(readOnly = true)
+        public AdminUserDetailResponse getUserById(Long userId) {
+                User user = userRepository
+                                .findById(userId)
+                                .orElseThrow(
+                                                () -> new AdminUserNotFoundException(userId));
+
+                return mapToDetailResponse(user);
+        }
+
+        private AdminUserDetailResponse mapToDetailResponse(User user) {
+                return new AdminUserDetailResponse(
+                                user.getId(),
+                                user.getFirstName(),
+                                user.getLastName(),
+                                user.getFullName(),
+                                user.getEmail(),
+                                user.getDateOfBirth(),
+                                user.getGender(),
+                                user.getAddress(),
+                                user.getPhone(),
+                                user.getAvatarUrl(),
+                                user.getRole(),
+                                user.getStatus(),
+                                user.getUpdatedBy(),
+                                user.getLockedBy(),
+                                user.getLockedAt(),
+                                user.getDeletedBy(),
+                                user.getDeletedAt(),
+                                user.getCreatedAt(),
+                                user.getUpdatedAt());
         }
 
         private String normalizeKeyword(

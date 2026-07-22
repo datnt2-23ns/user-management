@@ -14,6 +14,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -215,6 +216,39 @@ public class GlobalExceptionHandler {
                                 null);
         }
 
+        @ExceptionHandler(InvalidPasswordChangeException.class)
+        public ResponseEntity<ApiErrorResponse> handleInvalidPasswordChange(
+                        InvalidPasswordChangeException exception) {
+                return buildResponse(
+                                HttpStatus.BAD_REQUEST,
+                                exception.getMessage(),
+                                null);
+        }
+
+        @ExceptionHandler(AdminUserNotFoundException.class)
+        public ResponseEntity<ApiErrorResponse> handleAdminUserNotFound(
+                        AdminUserNotFoundException exception) {
+                return buildResponse(
+                                HttpStatus.NOT_FOUND,
+                                exception.getMessage(),
+                                null);
+        }
+
+        @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+        public ResponseEntity<ApiErrorResponse> handleMethodArgumentTypeMismatch(
+                        MethodArgumentTypeMismatchException exception) {
+                String message = "Tham số không đúng định dạng";
+
+                if ("userId".equals(exception.getName())) {
+                        message = "ID tài khoản phải là một số nguyên";
+                }
+
+                return buildResponse(
+                                HttpStatus.BAD_REQUEST,
+                                message,
+                                null);
+        }
+
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ApiErrorResponse> handleUnexpectedException(
                         Exception exception) {
@@ -225,15 +259,6 @@ public class GlobalExceptionHandler {
                 return buildResponse(
                                 HttpStatus.INTERNAL_SERVER_ERROR,
                                 "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau",
-                                null);
-        }
-
-        @ExceptionHandler(InvalidPasswordChangeException.class)
-        public ResponseEntity<ApiErrorResponse> handleInvalidPasswordChange(
-                        InvalidPasswordChangeException exception) {
-                return buildResponse(
-                                HttpStatus.BAD_REQUEST,
-                                exception.getMessage(),
                                 null);
         }
 
