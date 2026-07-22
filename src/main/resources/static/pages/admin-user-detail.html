@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Chi tiết tài khoản</title>
+
+    <link rel="stylesheet" href="/css/main.css" />
+
+    <link rel="stylesheet" href="/css/admin-user-detail.css" />
+  </head>
+
+  <body>
+    <div data-app-header></div>
+
+    <main class="user-detail-page">
+      <section class="user-detail-card">
+        <header class="detail-heading">
+          <div>
+            <h1>Chi tiết tài khoản</h1>
+
+            <p>Thông tin tài khoản được hiển thị ở chế độ chỉ đọc.</p>
+          </div>
+
+          <a class="button secondary" href="/pages/admin-users.html">
+            Quay lại danh sách
+          </a>
+        </header>
+
+        <div
+          id="detail-message"
+          class="detail-message"
+          role="alert"
+          aria-live="polite"
+          hidden
+        ></div>
+
+        <div id="detail-loading" class="detail-state">
+          Đang tải thông tin tài khoản...
+        </div>
+
+        <div id="detail-content" hidden>
+          <section class="profile-summary">
+            <img
+              id="user-avatar"
+              class="profile-avatar"
+              src="/images/default-avatar.svg"
+              alt="Ảnh đại diện"
+            />
+
+            <div class="profile-summary__content">
+              <h2 id="user-full-name">Người dùng</h2>
+
+              <p id="user-email">—</p>
+
+              <div class="profile-badges">
+                <span id="user-role" class="badge"> — </span>
+
+                <span id="user-status" class="badge"> — </span>
+              </div>
+            </div>
+          </section>
+
+          <section class="detail-section">
+            <h2>Thông tin cá nhân</h2>
+
+            <div class="detail-grid">
+              <div class="detail-field">
+                <span class="detail-label"> ID tài khoản </span>
+
+                <span id="detail-id" class="detail-value"> — </span>
+              </div>
+
+              <div class="detail-field">
+                <span class="detail-label"> Họ và tên đệm </span>
+
+                <span id="detail-last-name" class="detail-value"> — </span>
+              </div>
+
+              <div class="detail-field">
+                <span class="detail-label"> Tên </span>
+
+                <span id="detail-first-name" class="detail-value"> — </span>
+              </div>
+
+              <div class="detail-field">
+                <span class="detail-label"> Email </span>
+
+                <span id="detail-email" class="detail-value"> — </span>
+              </div>
+
+              <div class="detail-field">
+                <span class="detail-label"> Số điện thoại </span>
+
+                <span id="detail-phone" class="detail-value"> — </span>
+              </div>
+
+              <div class="detail-field">
+                <span class="detail-label"> Ngày sinh </span>
+
+                <span id="detail-date-of-birth" class="detail-value"> — </span>
+              </div>
+
+              <div class="detail-field">
+                <span class="detail-label"> Giới tính </span>
+
+                <span id="detail-gender" class="detail-value"> — </span>
+              </div>
+
+              <div class="detail-field detail-field--full">
+                <span class="detail-label"> Địa chỉ </span>
+
+                <span id="detail-address" class="detail-value"> — </span>
+              </div>
+            </div>
+          </section>
+
+          <section class="detail-section">
+            <h2>Thông tin hệ thống</h2>
+
+            <div class="detail-grid">
+              <div class="detail-field">
+                <span class="detail-label"> Vai trò </span>
+
+                <span id="detail-role" class="detail-value"> — </span>
+              </div>
+
+              <div class="detail-field">
+                <span class="detail-label"> Trạng thái </span>
+
+                <span id="detail-status" class="detail-value"> — </span>
+              </div>
+
+              <div class="detail-field">
+                <span class="detail-label"> Ngày tạo </span>
+
+                <span id="detail-created-at" class="detail-value"> — </span>
+              </div>
+
+              <div class="detail-field">
+                <span class="detail-label"> Cập nhật gần nhất </span>
+
+                <span id="detail-updated-at" class="detail-value"> — </span>
+              </div>
+
+              <div class="detail-field">
+                <span class="detail-label"> Người cập nhật </span>
+
+                <span id="detail-updated-by" class="detail-value"> — </span>
+              </div>
+
+              <div class="detail-field">
+                <span class="detail-label"> Người khóa </span>
+
+                <span id="detail-locked-by" class="detail-value"> — </span>
+              </div>
+
+              <div class="detail-field">
+                <span class="detail-label"> Thời gian khóa </span>
+
+                <span id="detail-locked-at" class="detail-value"> — </span>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <div data-app-footer></div>
+
+    <script src="/js/layout.js"></script>
+
+    <script type="module" src="/js/auth-ui.js"></script>
+
+    <script type="module" src="/js/admin-user-detail.js"></script>
+  </body>
+</html>

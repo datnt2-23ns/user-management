@@ -344,7 +344,25 @@ function createUserRow(user) {
 
   row.appendChild(createTextCell(formatDateTime(user.createdAt)));
 
+  row.appendChild(createActionCell(user.id));
+
   return row;
+}
+
+function createActionCell(userId) {
+  const cell = document.createElement("td");
+
+  const detailLink = document.createElement("a");
+
+  detailLink.className = "detail-link";
+
+  detailLink.href = `/pages/admin-user-detail.html?id=${encodeURIComponent(userId)}`;
+
+  detailLink.textContent = "Xem chi tiết";
+
+  cell.appendChild(detailLink);
+
+  return cell;
 }
 
 function buildFullName(user) {
