@@ -1,10 +1,14 @@
 package org.example.usermanagement.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.example.usermanagement.dto.request.UpdateUserStatusRequest;
 import org.example.usermanagement.dto.response.AdminUserListItemResponse;
 import org.example.usermanagement.dto.response.PageResponse;
 import org.example.usermanagement.dto.response.AdminUserDetailResponse;
+import org.example.usermanagement.dto.response.AdminUserStatusResponse;
 import org.example.usermanagement.exception.AdminUserNotFoundException;
+import org.example.usermanagement.exception.CurrentUserNotFoundException;
+import org.example.usermanagement.exception.SelfLockNotAllowedException;
 import org.example.usermanagement.entity.User;
 import org.example.usermanagement.exception.InvalidUserListQueryException;
 import org.example.usermanagement.repository.UserRepository;
@@ -24,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -96,6 +101,50 @@ public class AdminUserServiceImpl
                                                 () -> new AdminUserNotFoundException(userId));
 
                 return mapToDetailResponse(user);
+        }
+
+        @Override
+        @Transactional
+        public AdminUserStatusResponse updateUserStatus(
+                        Long userId,
+                        String adminEmail,
+                        UpdateUserStatusRequest request) {
+                User currentAdmin = userRepository
+                                .findByEmailIgnoreCase(adminEmail)
+                                .orElseThrow(
+                                                () -> new CurrentUserNotFoundException(
+                                                                "Không tìm thấy quản trị viên đang đăng nhập"));
+
+                User targetUser = userRepository
+                                .findById(userId)
+                                .orElseThrow(
+                                                () -> new AdminUserNotFoundException(userId));
+
+                UserStatus requestedStatus = request.status();
+
+                if (currentAdmin.getId().equals(targetUser.getId())
+                                && requestedStatus == UserStatus.LOCKED) {
+                        throw new SelfLockNotAllowedException();
+                }
+
+                if (targetUser.getStatus() == requestedStatus) {
+                        return mapToStatusResponse(targetUser);
+                }
+
+                targetUser.setStatus(requestedStatus);
+                targetUser.setUpdatedBy(currentAdmin.getId());
+
+                if (requestedStatus == UserStatus.LOCKED) {
+                        targetUser.setLockedBy(currentAdmin.getId());
+                        targetUser.setLockedAt(LocalDateTime.now());
+                } else {
+                        targetUser.setLockedBy(null);
+                        targetUser.setLockedAt(null);
+                }
+
+                User savedUser = userRepository.saveAndFlush(targetUser);
+
+                return mapToStatusResponse(savedUser);
         }
 
         private AdminUserDetailResponse mapToDetailResponse(User user) {
@@ -294,5 +343,18 @@ public class AdminUserServiceImpl
                                         predicates.toArray(
                                                         new Predicate[0]));
                 };
+        }
+
+        private AdminUserStatusResponse mapToStatusResponse(User user) {
+                return new AdminUserStatusResponse(
+                                user.getId(),
+                                user.getFullName(),
+                                user.getEmail(),
+                                user.getRole(),
+                                user.getStatus(),
+                                user.getUpdatedBy(),
+                                user.getLockedBy(),
+                                user.getLockedAt(),
+                                user.getUpdatedAt());
         }
 }

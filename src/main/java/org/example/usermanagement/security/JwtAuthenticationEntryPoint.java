@@ -27,37 +27,30 @@ public class JwtAuthenticationEntryPoint
                         HttpServletResponse response,
                         AuthenticationException authenticationException) throws IOException {
 
-                Object accountForbidden = request.getAttribute(
-                                JwtAuthenticationFilter.ACCOUNT_FORBIDDEN_ATTRIBUTE);
-
                 Object jwtError = request.getAttribute(
                                 JwtAuthenticationFilter.JWT_ERROR_ATTRIBUTE);
 
-                HttpStatus status;
-                String message;
-
-                if (accountForbidden instanceof String forbiddenMessage) {
-                        status = HttpStatus.FORBIDDEN;
-                        message = forbiddenMessage;
-                } else {
-                        status = HttpStatus.UNAUTHORIZED;
-
-                        message = jwtError instanceof String jwtMessage
-                                        ? jwtMessage
-                                        : "Bạn chưa đăng nhập hoặc token không hợp lệ";
-                }
+                String message = jwtError instanceof String jwtMessage
+                                ? jwtMessage
+                                : "Bạn chưa đăng nhập hoặc token không hợp lệ";
 
                 ApiErrorResponse responseBody = ApiErrorResponse.builder()
-                                .status(status.value())
+                                .status(
+                                                HttpStatus.UNAUTHORIZED.value())
                                 .message(message)
-                                .timestamp(LocalDateTime.now())
+                                .timestamp(
+                                                LocalDateTime.now())
                                 .errors(null)
                                 .build();
 
-                response.setStatus(status.value());
+                response.setStatus(
+                                HttpStatus.UNAUTHORIZED.value());
+
                 response.setContentType(
                                 MediaType.APPLICATION_JSON_VALUE);
-                response.setCharacterEncoding("UTF-8");
+
+                response.setCharacterEncoding(
+                                "UTF-8");
 
                 objectMapper.writeValue(
                                 response.getOutputStream(),

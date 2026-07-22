@@ -14,43 +14,53 @@ import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
-public class CustomUserDetailsService implements UserDetailsService {
+public class CustomUserDetailsService
+                implements UserDetailsService {
 
         private final UserRepository userRepository;
 
         @Override
         @Transactional(readOnly = true)
-        public UserDetails loadUserByUsername(String email)
-                        throws UsernameNotFoundException {
+        public UserDetails loadUserByUsername(
+                        String email) throws UsernameNotFoundException {
 
                 String normalizedEmail = normalizeEmail(email);
 
                 User user = userRepository
-                                .findByEmailIgnoreCase(normalizedEmail)
-                                .orElseThrow(() -> new UsernameNotFoundException(
-                                                "Không tìm thấy tài khoản với email đã cung cấp"));
+                                .findByEmailIgnoreCase(
+                                                normalizedEmail)
+                                .orElseThrow(
+                                                () -> new UsernameNotFoundException(
+                                                                "Không tìm thấy tài khoản với email đã cung cấp"));
 
-                boolean locked = user.getStatus() == UserStatus.LOCKED;
+                UserStatus status = user.getStatus();
 
-                boolean deleted = user.getStatus() == UserStatus.DELETED;
+                boolean locked = status == UserStatus.LOCKED;
+
+                boolean deleted = status == UserStatus.DELETED;
 
                 return org.springframework.security.core.userdetails.User
-                                .withUsername(user.getEmail())
-                                .password(user.getPassword())
+                                .withUsername(
+                                                user.getEmail())
+                                .password(
+                                                user.getPassword())
                                 .authorities(
-                                                "ROLE_" + user.getRole().name())
+                                                "ROLE_"
+                                                                + user.getRole().name())
                                 .accountLocked(locked)
                                 .disabled(deleted)
                                 .build();
         }
 
-        private String normalizeEmail(String email) {
+        private String normalizeEmail(
+                        String email) {
                 if (email == null) {
                         return "";
                 }
 
                 return email
                                 .trim()
-                                .toLowerCase(Locale.ROOT);
+                                .toLowerCase(
+                                                Locale.ROOT);
         }
 }

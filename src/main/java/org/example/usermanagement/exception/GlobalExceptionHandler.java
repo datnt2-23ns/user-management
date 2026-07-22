@@ -249,6 +249,15 @@ public class GlobalExceptionHandler {
                                 null);
         }
 
+        @ExceptionHandler(SelfLockNotAllowedException.class)
+        public ResponseEntity<ApiErrorResponse> handleSelfLockNotAllowed(
+                        SelfLockNotAllowedException exception) {
+                return buildResponse(
+                                HttpStatus.BAD_REQUEST,
+                                exception.getMessage(),
+                                null);
+        }
+
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ApiErrorResponse> handleUnexpectedException(
                         Exception exception) {

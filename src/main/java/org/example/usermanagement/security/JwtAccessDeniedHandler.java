@@ -27,12 +27,20 @@ public class JwtAccessDeniedHandler
                         HttpServletResponse response,
                         AccessDeniedException accessDeniedException) throws IOException {
 
+                Object accountForbidden = request.getAttribute(
+                                JwtAuthenticationFilter.ACCOUNT_FORBIDDEN_ATTRIBUTE);
+
+                String message = accountForbidden instanceof String forbiddenMessage
+                                && !forbiddenMessage.isBlank()
+                                                ? forbiddenMessage
+                                                : "Bạn không có quyền truy cập chức năng này";
+
                 ApiErrorResponse responseBody = ApiErrorResponse.builder()
                                 .status(
                                                 HttpStatus.FORBIDDEN.value())
-                                .message(
-                                                "Bạn không có quyền truy cập chức năng này")
-                                .timestamp(LocalDateTime.now())
+                                .message(message)
+                                .timestamp(
+                                                LocalDateTime.now())
                                 .errors(null)
                                 .build();
 
@@ -42,7 +50,8 @@ public class JwtAccessDeniedHandler
                 response.setContentType(
                                 MediaType.APPLICATION_JSON_VALUE);
 
-                response.setCharacterEncoding("UTF-8");
+                response.setCharacterEncoding(
+                                "UTF-8");
 
                 objectMapper.writeValue(
                                 response.getOutputStream(),
