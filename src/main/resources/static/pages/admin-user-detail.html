@@ -24,9 +24,20 @@
             <p>Thông tin tài khoản được hiển thị ở chế độ chỉ đọc.</p>
           </div>
 
-          <a class="button secondary" href="/pages/admin-users.html">
-            Quay lại danh sách
-          </a>
+          <div class="detail-actions">
+            <a class="button secondary" href="/pages/admin-users.html">
+              Quay lại danh sách
+            </a>
+
+            <button
+              id="toggle-user-status"
+              class="button danger"
+              type="button"
+              disabled
+            >
+              Khóa tài khoản
+            </button>
+          </div>
         </header>
 
         <div
@@ -167,6 +178,43 @@
         </div>
       </section>
     </main>
+
+    <div
+      id="status-confirm-dialog"
+      class="confirm-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-dialog-title"
+      hidden
+    >
+      <div class="confirm-dialog__backdrop" data-dialog-close></div>
+
+      <section class="confirm-dialog__content">
+        <h2 id="confirm-dialog-title">Xác nhận thay đổi trạng thái</h2>
+
+        <p id="confirm-dialog-message">
+          Bạn có chắc chắn muốn thay đổi trạng thái tài khoản này?
+        </p>
+
+        <div class="confirm-dialog__actions">
+          <button
+            id="cancel-status-change"
+            class="button secondary"
+            type="button"
+          >
+            Hủy
+          </button>
+
+          <button
+            id="confirm-status-change"
+            class="button danger"
+            type="button"
+          >
+            Xác nhận
+          </button>
+        </div>
+      </section>
+    </div>
 
     <div data-app-footer></div>
 

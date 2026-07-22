@@ -1,6 +1,6 @@
 import { apiRequest } from "/js/api.js";
 
-import { clearAuthSession, isAuthenticated } from "/js/auth.js";
+import { clearAuthSession, getCurrentUser, isAuthenticated } from "/js/auth.js";
 
 const REQUEST_TIMEOUT_MS = 5000;
 
@@ -22,6 +22,22 @@ const roleBadgeElement = document.getElementById("user-role");
 
 const statusBadgeElement = document.getElementById("user-status");
 
+const toggleStatusButton = document.getElementById("toggle-user-status");
+
+const confirmDialog = document.getElementById("status-confirm-dialog");
+
+const confirmDialogTitle = document.getElementById("confirm-dialog-title");
+
+const confirmDialogMessage = document.getElementById("confirm-dialog-message");
+
+const cancelStatusButton = document.getElementById("cancel-status-change");
+
+const confirmStatusButton = document.getElementById("confirm-status-change");
+
+let displayedUser = null;
+
+let pendingStatus = null;
+
 initializePage().catch(handleInitializationError);
 
 async function initializePage() {
@@ -31,6 +47,7 @@ async function initializePage() {
   }
 
   validateRequiredElements();
+  registerStatusEventListeners();
 
   const userId = getUserIdFromUrl();
 
@@ -55,6 +72,12 @@ function validateRequiredElements() {
     emailSummaryElement,
     roleBadgeElement,
     statusBadgeElement,
+    toggleStatusButton,
+    confirmDialog,
+    confirmDialogTitle,
+    confirmDialogMessage,
+    cancelStatusButton,
+    confirmStatusButton,
   };
 
   for (const [name, element] of Object.entries(requiredElements)) {
@@ -62,6 +85,24 @@ function validateRequiredElements() {
       throw new Error(`Không tìm thấy phần tử giao diện: ${name}`);
     }
   }
+}
+
+function registerStatusEventListeners() {
+  toggleStatusButton.addEventListener("click", openStatusConfirmDialog);
+
+  cancelStatusButton.addEventListener("click", closeStatusConfirmDialog);
+
+  confirmStatusButton.addEventListener("click", confirmStatusChange);
+
+  document.querySelectorAll("[data-dialog-close]").forEach((element) => {
+    element.addEventListener("click", closeStatusConfirmDialog);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !confirmDialog.hidden) {
+      closeStatusConfirmDialog();
+    }
+  });
 }
 
 function getUserIdFromUrl() {
@@ -101,6 +142,8 @@ async function loadUserDetail(userId) {
 }
 
 function renderUserDetail(user) {
+  displayedUser = user;
+
   const fullName = user.fullName || buildFullName(user) || "Người dùng";
 
   avatarElement.src = normalizeAvatarUrl(user.avatarUrl);
@@ -148,7 +191,187 @@ function renderUserDetail(user) {
 
   setText("detail-locked-at", formatDateTime(user.lockedAt));
 
+  configureStatusButton(user);
+
   contentElement.hidden = false;
+}
+
+function configureStatusButton(user) {
+  const currentUser = getCurrentUser();
+
+  const isCurrentAccount = isSameAccount(currentUser, user);
+
+  if (isCurrentAccount) {
+    toggleStatusButton.disabled = true;
+    toggleStatusButton.textContent = "Không thể thao tác trên chính mình";
+
+    toggleStatusButton.className = "button secondary";
+
+    toggleStatusButton.title =
+      "Quản trị viên không thể tự khóa tài khoản của mình";
+
+    return;
+  }
+
+  toggleStatusButton.title = "";
+
+  if (user.status === "ACTIVE") {
+    toggleStatusButton.disabled = false;
+    toggleStatusButton.textContent = "Khóa tài khoản";
+
+    toggleStatusButton.className = "button danger";
+
+    return;
+  }
+
+  if (user.status === "LOCKED") {
+    toggleStatusButton.disabled = false;
+    toggleStatusButton.textContent = "Mở khóa tài khoản";
+
+    toggleStatusButton.className = "button success";
+
+    return;
+  }
+
+  toggleStatusButton.disabled = true;
+  toggleStatusButton.textContent = "Không thể thay đổi trạng thái";
+
+  toggleStatusButton.className = "button secondary";
+}
+
+function isSameAccount(currentUser, targetUser) {
+  const currentUserId = Number(currentUser?.id);
+
+  const targetUserId = Number(targetUser?.id);
+
+  const sameId =
+    Number.isSafeInteger(currentUserId) &&
+    Number.isSafeInteger(targetUserId) &&
+    currentUserId === targetUserId;
+
+  const currentEmail = normalizeEmail(currentUser?.email);
+
+  const targetEmail = normalizeEmail(targetUser?.email);
+
+  const sameEmail = currentEmail !== "" && currentEmail === targetEmail;
+
+  return sameId || sameEmail;
+}
+
+function normalizeEmail(email) {
+  return typeof email === "string" ? email.trim().toLowerCase() : "";
+}
+
+function openStatusConfirmDialog() {
+  if (!displayedUser || toggleStatusButton.disabled) {
+    return;
+  }
+
+  pendingStatus = displayedUser.status === "ACTIVE" ? "LOCKED" : "ACTIVE";
+
+  const fullName =
+    displayedUser.fullName ||
+    buildFullName(displayedUser) ||
+    displayedUser.email ||
+    "tài khoản này";
+
+  if (pendingStatus === "LOCKED") {
+    confirmDialogTitle.textContent = "Xác nhận khóa tài khoản";
+
+    confirmDialogMessage.textContent =
+      `Bạn có chắc chắn muốn khóa tài khoản “${fullName}”? ` +
+      "Tài khoản này sẽ không thể tiếp tục sử dụng token cũ.";
+
+    confirmStatusButton.textContent = "Khóa tài khoản";
+
+    confirmStatusButton.className = "button danger";
+  } else {
+    confirmDialogTitle.textContent = "Xác nhận mở khóa tài khoản";
+
+    confirmDialogMessage.textContent = `Bạn có chắc chắn muốn mở khóa tài khoản “${fullName}”?`;
+
+    confirmStatusButton.textContent = "Mở khóa tài khoản";
+
+    confirmStatusButton.className = "button success";
+  }
+
+  confirmDialog.hidden = false;
+
+  document.body.classList.add("dialog-open");
+
+  confirmStatusButton.focus();
+}
+
+function closeStatusConfirmDialog() {
+  confirmDialog.hidden = true;
+
+  document.body.classList.remove("dialog-open");
+
+  pendingStatus = null;
+
+  toggleStatusButton.focus();
+}
+
+async function confirmStatusChange() {
+  if (!displayedUser || !pendingStatus) {
+    return;
+  }
+
+  const requestedStatus = pendingStatus;
+
+  setStatusActionLoading(true);
+
+  try {
+    const updatedUser = await apiRequest(
+      `/admin/users/${displayedUser.id}/status`,
+      {
+        method: "PATCH",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          status: requestedStatus,
+        }),
+
+        timeoutMs: REQUEST_TIMEOUT_MS,
+      },
+    );
+
+    displayedUser = {
+      ...displayedUser,
+      ...updatedUser,
+    };
+
+    closeStatusConfirmDialog();
+
+    renderUserDetail(displayedUser);
+
+    showMessage(
+      requestedStatus === "LOCKED"
+        ? "Khóa tài khoản thành công."
+        : "Mở khóa tài khoản thành công.",
+      "success",
+    );
+  } catch (error) {
+    closeStatusConfirmDialog();
+    handleApiError(error);
+  } finally {
+    setStatusActionLoading(false);
+  }
+}
+
+function setStatusActionLoading(loading) {
+  confirmStatusButton.disabled = loading;
+
+  cancelStatusButton.disabled = loading;
+
+  toggleStatusButton.disabled = loading;
+
+  if (loading) {
+    confirmStatusButton.textContent = "Đang xử lý...";
+  }
 }
 
 function setText(elementId, value) {
@@ -310,7 +533,10 @@ function handleApiError(error) {
   }
 
   if (error.status === 400) {
-    showMessage(error.data?.message || "ID tài khoản không hợp lệ.", "error");
+    showMessage(
+      error.data?.message || "Yêu cầu thay đổi trạng thái không hợp lệ.",
+      "error",
+    );
 
     return;
   }
@@ -352,7 +578,7 @@ function handleApiError(error) {
 function showMessage(message, type) {
   messageElement.textContent = message;
 
-  messageElement.classList.remove("error");
+  messageElement.classList.remove("error", "success");
 
   messageElement.classList.add(type);
 
@@ -363,7 +589,7 @@ function hideMessage() {
   messageElement.textContent = "";
   messageElement.hidden = true;
 
-  messageElement.classList.remove("error");
+  messageElement.classList.remove("error", "success");
 }
 
 function handleInitializationError(error) {
