@@ -7,6 +7,8 @@ import org.example.usermanagement.dto.response.AdminUserListItemResponse;
 import org.example.usermanagement.dto.response.PageResponse;
 import org.example.usermanagement.dto.response.AdminUserStatusResponse;
 import org.example.usermanagement.dto.request.UpdateUserStatusRequest;
+import org.example.usermanagement.dto.request.UpdateUserRoleRequest;
+import org.example.usermanagement.dto.response.AdminUserRoleResponse;
 import org.example.usermanagement.service.AdminUserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -75,5 +77,27 @@ public class AdminUserController {
                                                 userId,
                                                 currentAdmin.getUsername(),
                                                 request));
+        }
+
+        @PatchMapping("/{userId}/role")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<AdminUserRoleResponse> updateUserRole(
+                        @PathVariable Long userId,
+
+                        @Valid @RequestBody UpdateUserRoleRequest request,
+
+                        @AuthenticationPrincipal UserDetails currentAdmin) {
+                if (currentAdmin == null) {
+                        throw new CurrentUserNotFoundException(
+                                        "Không xác định được quản trị viên đang đăng nhập");
+                }
+
+                AdminUserRoleResponse response = adminUserService.updateUserRole(
+                                userId,
+                                currentAdmin.getUsername(),
+                                request);
+
+                return ResponseEntity.ok(
+                                response);
         }
 }
