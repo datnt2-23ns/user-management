@@ -175,6 +175,35 @@
               </div>
             </div>
           </section>
+
+          <section class="detail-section">
+            <h2>Thay đổi vai trò</h2>
+
+            <div class="role-management">
+              <div class="role-management__field">
+                <label for="role-select"> Vai trò mới </label>
+
+                <select id="role-select" name="role">
+                  <option value="USER">User</option>
+
+                  <option value="ADMIN">Admin</option>
+                </select>
+              </div>
+
+              <button
+                id="change-role-button"
+                class="button primary"
+                type="button"
+                disabled
+              >
+                Thay đổi vai trò
+              </button>
+            </div>
+
+            <p class="role-management__help">
+              Hệ thống luôn phải còn ít nhất một Admin đang hoạt động.
+            </p>
+          </section>
         </div>
       </section>
     </main>
@@ -210,6 +239,39 @@
             class="button danger"
             type="button"
           >
+            Xác nhận
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <div
+      id="role-confirm-dialog"
+      class="confirm-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="role-dialog-title"
+      hidden
+    >
+      <div class="confirm-dialog__backdrop" data-role-dialog-close></div>
+
+      <section class="confirm-dialog__content">
+        <h2 id="role-dialog-title">Xác nhận thay đổi vai trò</h2>
+
+        <p id="role-dialog-message">
+          Bạn có chắc chắn muốn thay đổi vai trò của tài khoản này?
+        </p>
+
+        <div class="confirm-dialog__actions">
+          <button
+            id="cancel-role-change"
+            class="button secondary"
+            type="button"
+          >
+            Hủy
+          </button>
+
+          <button id="confirm-role-change" class="button primary" type="button">
             Xác nhận
           </button>
         </div>
