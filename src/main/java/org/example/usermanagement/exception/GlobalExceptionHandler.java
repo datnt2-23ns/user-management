@@ -51,7 +51,7 @@ public class GlobalExceptionHandler {
                         HttpMessageNotReadableException exception) {
                 return buildResponse(
                                 HttpStatus.BAD_REQUEST,
-                                "Dữ liệu JSON không hợp lệ hoặc chứa giá trị không được hỗ trợ",
+                                "Dữ liệu JSON không hợp lệ hoặc sai định dạng ngày/giới tính",
                                 null);
         }
 
@@ -73,7 +73,7 @@ public class GlobalExceptionHandler {
 
                 return buildResponse(
                                 HttpStatus.CONFLICT,
-                                "Dữ liệu bị trùng hoặc xung đột với ràng buộc hệ thống",
+                                "Email đã tồn tại trong hệ thống",
                                 null);
         }
 
@@ -256,28 +256,6 @@ public class GlobalExceptionHandler {
                                 HttpStatus.BAD_REQUEST,
                                 exception.getMessage(),
                                 null);
-        }
-
-        @ExceptionHandler(SelfDeleteNotAllowedException.class)
-        public ResponseEntity<ApiErrorResponse> handleSelfDeleteNotAllowed(
-                SelfDeleteNotAllowedException exception
-        ) {
-                return buildResponse(
-                        HttpStatus.BAD_REQUEST,
-                        exception.getMessage(),
-                        null
-                );
-        }
-
-        @ExceptionHandler(LastActiveAdminException.class)
-        public ResponseEntity<ApiErrorResponse> handleLastActiveAdmin(
-                LastActiveAdminException exception
-        ) {
-                return buildResponse(
-                        HttpStatus.CONFLICT,
-                        exception.getMessage(),
-                        null
-                );
         }
 
         @ExceptionHandler(Exception.class)

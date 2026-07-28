@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.example.usermanagement.exception.CurrentUserNotFoundException;
 
 @RestController
@@ -75,5 +76,22 @@ public class AdminUserController {
                                                 userId,
                                                 currentAdmin.getUsername(),
                                                 request));
+        }
+
+        @DeleteMapping("/{userId}")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<Void> deleteUser(
+                        @PathVariable Long userId,
+                        @AuthenticationPrincipal UserDetails currentAdmin) {
+                if (currentAdmin == null) {
+                        throw new CurrentUserNotFoundException(
+                                        "Không xác định được quản trị viên đang đăng nhập");
+                }
+
+                adminUserService.deleteUser(
+                                userId,
+                                currentAdmin.getUsername());
+
+                return ResponseEntity.noContent().build();
         }
 }
