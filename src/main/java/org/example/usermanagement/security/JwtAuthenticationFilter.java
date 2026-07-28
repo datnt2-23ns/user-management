@@ -65,10 +65,6 @@ public class JwtAuthenticationFilter
 
                         if (StringUtils.hasText(email)
                                         && notAuthenticated) {
-                                /*
-                                 * Tải lại tài khoản từ database ở mỗi request.
-                                 * Vì vậy trạng thái LOCKED mới nhất luôn được kiểm tra.
-                                 */
                                 UserDetails userDetails = userDetailsService
                                                 .loadUserByUsername(
                                                                 email);

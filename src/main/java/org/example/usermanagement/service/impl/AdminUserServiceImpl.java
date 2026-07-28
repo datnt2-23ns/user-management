@@ -21,9 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.criteria.Predicate;
 import org.example.usermanagement.enums.Role;
 import org.example.usermanagement.enums.UserStatus;
-import org.example.usermanagement.dto.request.UpdateUserRoleRequest;
-import org.example.usermanagement.dto.response.AdminUserRoleResponse;
-import org.example.usermanagement.exception.LastActiveAdminException;
 import org.springframework.data.jpa.domain.Specification;
 import jakarta.persistence.criteria.Expression;
 
@@ -148,60 +145,6 @@ public class AdminUserServiceImpl
                 User savedUser = userRepository.saveAndFlush(targetUser);
 
                 return mapToStatusResponse(savedUser);
-        }
-
-        @Override
-        @Transactional
-        public AdminUserRoleResponse updateUserRole(
-                        Long userId,
-                        String adminEmail,
-                        UpdateUserRoleRequest request) {
-                User currentAdmin = userRepository
-                                .findByEmailIgnoreCase(adminEmail)
-                                .orElseThrow(
-                                                () -> new CurrentUserNotFoundException(
-                                                                "Không tìm thấy quản trị viên đang đăng nhập"));
-
-                User targetUser = userRepository
-                                .findById(userId)
-                                .filter(
-                                                user -> user.getStatus() != UserStatus.DELETED)
-                                .orElseThrow(
-                                                () -> new AdminUserNotFoundException(
-                                                                userId));
-
-                Role requestedRole = request.role();
-
-                if (targetUser.getRole() == requestedRole) {
-                        return mapToRoleResponse(
-                                        targetUser);
-                }
-
-                boolean demotingActiveAdmin = targetUser.getRole() == Role.ADMIN
-                                && requestedRole == Role.USER
-                                && targetUser.getStatus() == UserStatus.ACTIVE;
-
-                if (demotingActiveAdmin) {
-                        long activeAdminCount = userRepository.countByRoleAndStatus(
-                                        Role.ADMIN,
-                                        UserStatus.ACTIVE);
-
-                        if (activeAdminCount <= 1) {
-                                throw new LastActiveAdminException();
-                        }
-                }
-
-                targetUser.setRole(
-                                requestedRole);
-
-                targetUser.setUpdatedBy(
-                                currentAdmin.getId());
-
-                User savedUser = userRepository.saveAndFlush(
-                                targetUser);
-
-                return mapToRoleResponse(
-                                savedUser);
         }
 
         private AdminUserDetailResponse mapToDetailResponse(User user) {
@@ -412,18 +355,6 @@ public class AdminUserServiceImpl
                                 user.getUpdatedBy(),
                                 user.getLockedBy(),
                                 user.getLockedAt(),
-                                user.getUpdatedAt());
-        }
-
-        private AdminUserRoleResponse mapToRoleResponse(
-                        User user) {
-                return new AdminUserRoleResponse(
-                                user.getId(),
-                                user.getFullName(),
-                                user.getEmail(),
-                                user.getRole(),
-                                user.getStatus(),
-                                user.getUpdatedBy(),
                                 user.getUpdatedAt());
         }
 }

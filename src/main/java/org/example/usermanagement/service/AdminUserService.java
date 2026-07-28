@@ -5,8 +5,6 @@ import org.example.usermanagement.dto.response.AdminUserListItemResponse;
 import org.example.usermanagement.dto.response.PageResponse;
 import org.example.usermanagement.dto.response.AdminUserStatusResponse;
 import org.example.usermanagement.dto.request.UpdateUserStatusRequest;
-import org.example.usermanagement.dto.request.UpdateUserRoleRequest;
-import org.example.usermanagement.dto.response.AdminUserRoleResponse;
 
 public interface AdminUserService {
 
@@ -25,9 +23,4 @@ public interface AdminUserService {
                         Long userId,
                         String adminEmail,
                         UpdateUserStatusRequest request);
-
-        AdminUserRoleResponse updateUserRole(
-                        Long userId,
-                        String adminEmail,
-                        UpdateUserRoleRequest request);
 }

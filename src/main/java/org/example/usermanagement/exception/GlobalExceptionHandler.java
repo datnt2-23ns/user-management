@@ -258,15 +258,6 @@ public class GlobalExceptionHandler {
                                 null);
         }
 
-        @ExceptionHandler(LastActiveAdminException.class)
-        public ResponseEntity<ApiErrorResponse> handleLastActiveAdmin(
-                        LastActiveAdminException exception) {
-                return buildResponse(
-                                HttpStatus.CONFLICT,
-                                exception.getMessage(),
-                                null);
-        }
-
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ApiErrorResponse> handleUnexpectedException(
                         Exception exception) {
