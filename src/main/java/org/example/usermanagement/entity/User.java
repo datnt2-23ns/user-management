@@ -23,6 +23,7 @@ import org.example.usermanagement.enums.Role;
 import org.example.usermanagement.enums.UserStatus;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -51,6 +52,7 @@ public class User {
         @Column(nullable = false, length = 320)
         private String email;
 
+        @JsonIgnore
         @Column(nullable = false, length = 255)
         private String password;
 
