@@ -23,8 +23,4 @@ public interface AdminUserService {
                         Long userId,
                         String adminEmail,
                         UpdateUserStatusRequest request);
-
-        void deleteUser(
-                        Long userId,
-                        String adminEmail);
 }

@@ -34,6 +34,22 @@ const cancelStatusButton = document.getElementById("cancel-status-change");
 
 const confirmStatusButton = document.getElementById("confirm-status-change");
 
+const roleSelect = document.getElementById("role-select");
+
+const changeRoleButton = document.getElementById("change-role-button");
+
+const roleConfirmDialog = document.getElementById("role-confirm-dialog");
+
+const roleDialogTitle = document.getElementById("role-dialog-title");
+
+const roleDialogMessage = document.getElementById("role-dialog-message");
+
+const cancelRoleButton = document.getElementById("cancel-role-change");
+
+const confirmRoleButton = document.getElementById("confirm-role-change");
+
+let pendingRole = null;
+
 let displayedUser = null;
 
 let pendingStatus = null;
@@ -48,6 +64,7 @@ async function initializePage() {
 
   validateRequiredElements();
   registerStatusEventListeners();
+  registerRoleEventListeners();
 
   const userId = getUserIdFromUrl();
 
@@ -78,6 +95,13 @@ function validateRequiredElements() {
     confirmDialogMessage,
     cancelStatusButton,
     confirmStatusButton,
+    roleSelect,
+    changeRoleButton,
+    roleConfirmDialog,
+    roleDialogTitle,
+    roleDialogMessage,
+    cancelRoleButton,
+    confirmRoleButton,
   };
 
   for (const [name, element] of Object.entries(requiredElements)) {
@@ -192,6 +216,8 @@ function renderUserDetail(user) {
   setText("detail-locked-at", formatDateTime(user.lockedAt));
 
   configureStatusButton(user);
+
+  configureRoleControls(user);
 
   contentElement.hidden = false;
 }
@@ -534,7 +560,7 @@ function handleApiError(error) {
 
   if (error.status === 400) {
     showMessage(
-      error.data?.message || "Yêu cầu thay đổi trạng thái không hợp lệ.",
+      error.data?.message || "Yêu cầu thay đổi tài khoản không hợp lệ.",
       "error",
     );
 
@@ -559,6 +585,16 @@ function handleApiError(error) {
 
   if (error.status === 404) {
     showMessage(error.data?.message || "Không tìm thấy tài khoản.", "error");
+
+    return;
+  }
+
+  if (error.status === 409) {
+    showMessage(
+      error.data?.message ||
+        "Không thể hạ vai trò của Admin đang hoạt động cuối cùng.",
+      "error",
+    );
 
     return;
   }
@@ -609,6 +645,192 @@ function handleInitializationError(error) {
       "error",
     );
   }
+}
+
+function registerRoleEventListeners() {
+  roleSelect.addEventListener("change", updateRoleButtonState);
+
+  changeRoleButton.addEventListener("click", openRoleConfirmDialog);
+
+  cancelRoleButton.addEventListener("click", closeRoleConfirmDialog);
+
+  confirmRoleButton.addEventListener("click", confirmRoleChange);
+
+  document.querySelectorAll("[data-role-dialog-close]").forEach((element) => {
+    element.addEventListener("click", closeRoleConfirmDialog);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !roleConfirmDialog.hidden) {
+      closeRoleConfirmDialog();
+    }
+  });
+}
+
+function configureRoleControls(user) {
+  const supportedRole = user.role === "USER" || user.role === "ADMIN";
+
+  if (!supportedRole) {
+    roleSelect.disabled = true;
+    changeRoleButton.disabled = true;
+    return;
+  }
+
+  roleSelect.disabled = false;
+  roleSelect.value = user.role;
+
+  updateRoleButtonState();
+}
+
+function updateRoleButtonState() {
+  if (!displayedUser || roleSelect.disabled) {
+    changeRoleButton.disabled = true;
+    return;
+  }
+
+  changeRoleButton.disabled = roleSelect.value === displayedUser.role;
+}
+
+function openRoleConfirmDialog() {
+  if (!displayedUser || changeRoleButton.disabled) {
+    return;
+  }
+
+  pendingRole = roleSelect.value;
+
+  if (pendingRole !== "USER" && pendingRole !== "ADMIN") {
+    showMessage("Vai trò được chọn không hợp lệ.", "error");
+
+    return;
+  }
+
+  const displayName =
+    displayedUser.fullName ||
+    buildFullName(displayedUser) ||
+    displayedUser.email ||
+    "tài khoản này";
+
+  const oldRole = formatRole(displayedUser.role);
+
+  const newRole = formatRole(pendingRole);
+
+  roleDialogTitle.textContent = "Xác nhận thay đổi vai trò";
+
+  roleDialogMessage.textContent =
+    `Bạn có chắc chắn muốn thay đổi vai trò của tài khoản ` +
+    `“${displayName}” từ ${oldRole} thành ${newRole}?`;
+
+  const currentUser = getCurrentUser();
+
+  if (isSameAccount(currentUser, displayedUser) && pendingRole === "USER") {
+    roleDialogMessage.textContent +=
+      " Sau khi thực hiện, bạn sẽ mất quyền quản trị.";
+  }
+
+  roleConfirmDialog.hidden = false;
+
+  document.body.classList.add("dialog-open");
+
+  confirmRoleButton.focus();
+}
+
+function closeRoleConfirmDialog() {
+  roleConfirmDialog.hidden = true;
+
+  document.body.classList.remove("dialog-open");
+
+  pendingRole = null;
+
+  if (!changeRoleButton.disabled) {
+    changeRoleButton.focus();
+  }
+}
+
+async function confirmRoleChange() {
+  if (!displayedUser || !pendingRole) {
+    return;
+  }
+
+  const requestedRole = pendingRole;
+
+  const currentUser = getCurrentUser();
+
+  const changingOwnAccount = isSameAccount(currentUser, displayedUser);
+
+  setRoleActionLoading(true);
+
+  try {
+    const updatedUser = await apiRequest(
+      `/admin/users/${encodeURIComponent(displayedUser.id)}/role`,
+      {
+        method: "PATCH",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          role: requestedRole,
+        }),
+
+        timeoutMs: REQUEST_TIMEOUT_MS,
+      },
+    );
+
+    displayedUser = {
+      ...displayedUser,
+      ...updatedUser,
+    };
+
+    closeRoleConfirmDialog();
+
+    renderUserDetail(displayedUser);
+
+    if (changingOwnAccount && requestedRole === "USER") {
+      showMessage(
+        "Thay đổi vai trò thành công. Bạn đã mất quyền quản trị và cần đăng nhập lại.",
+        "success",
+      );
+
+      clearAuthSession();
+
+      window.setTimeout(redirectToLogin, 1800);
+
+      return;
+    }
+
+    showMessage(
+      requestedRole === "ADMIN"
+        ? "Nâng tài khoản thành Admin thành công."
+        : "Hạ tài khoản thành User thành công.",
+      "success",
+    );
+  } catch (error) {
+    closeRoleConfirmDialog();
+    handleApiError(error);
+  } finally {
+    setRoleActionLoading(false);
+  }
+}
+
+function setRoleActionLoading(loading) {
+  roleSelect.disabled = loading;
+
+  confirmRoleButton.disabled = loading;
+
+  cancelRoleButton.disabled = loading;
+
+  if (loading) {
+    changeRoleButton.disabled = true;
+
+    confirmRoleButton.textContent = "Đang xử lý...";
+
+    return;
+  }
+
+  confirmRoleButton.textContent = "Xác nhận";
+
+  configureRoleControls(displayedUser);
 }
 
 function redirectToLogin() {
