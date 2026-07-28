@@ -1,7 +1,6 @@
 package org.example.usermanagement.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.example.usermanagement.dto.request.UpdateUserStatusRequest;
 import org.example.usermanagement.dto.response.AdminUserListItemResponse;
 import org.example.usermanagement.dto.response.PageResponse;
@@ -10,20 +9,15 @@ import org.example.usermanagement.dto.response.AdminUserStatusResponse;
 import org.example.usermanagement.exception.AdminUserNotFoundException;
 import org.example.usermanagement.exception.CurrentUserNotFoundException;
 import org.example.usermanagement.exception.SelfLockNotAllowedException;
-import org.example.usermanagement.exception.SelfDeleteNotAllowedException;
 import org.example.usermanagement.entity.User;
 import org.example.usermanagement.exception.InvalidUserListQueryException;
 import org.example.usermanagement.repository.UserRepository;
 import org.example.usermanagement.service.AdminUserService;
-import org.example.usermanagement.service.AvatarStorageService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.springframework.util.StringUtils;
 import jakarta.persistence.criteria.Predicate;
 import org.example.usermanagement.enums.Role;
 import org.example.usermanagement.enums.UserStatus;
@@ -36,7 +30,6 @@ import java.util.Locale;
 import java.util.Set;
 import java.time.LocalDateTime;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminUserServiceImpl
@@ -55,8 +48,6 @@ public class AdminUserServiceImpl
                         "updatedAt");
 
         private final UserRepository userRepository;
-
-        private final AvatarStorageService avatarStorageService;
 
         @Override
         @Transactional(readOnly = true)
@@ -103,15 +94,11 @@ public class AdminUserServiceImpl
 
         @Override
         @Transactional(readOnly = true)
-        public AdminUserDetailResponse getUserById(
-                        Long userId) {
+        public AdminUserDetailResponse getUserById(Long userId) {
                 User user = userRepository
                                 .findById(userId)
-                                .filter(
-                                                existingUser -> existingUser.getStatus() != UserStatus.DELETED)
                                 .orElseThrow(
-                                                () -> new AdminUserNotFoundException(
-                                                                userId));
+                                                () -> new AdminUserNotFoundException(userId));
 
                 return mapToDetailResponse(user);
         }
@@ -130,11 +117,8 @@ public class AdminUserServiceImpl
 
                 User targetUser = userRepository
                                 .findById(userId)
-                                .filter(
-                                                user -> user.getStatus() != UserStatus.DELETED)
                                 .orElseThrow(
-                                                () -> new AdminUserNotFoundException(
-                                                                userId));
+                                                () -> new AdminUserNotFoundException(userId));
 
                 UserStatus requestedStatus = request.status();
 
@@ -161,64 +145,6 @@ public class AdminUserServiceImpl
                 User savedUser = userRepository.saveAndFlush(targetUser);
 
                 return mapToStatusResponse(savedUser);
-        }
-
-        @Override
-        @Transactional
-        public void deleteUser(
-                        Long userId,
-                        String adminEmail) {
-                User currentAdmin = userRepository
-                                .findByEmailIgnoreCase(adminEmail)
-                                .orElseThrow(
-                                                () -> new CurrentUserNotFoundException(
-                                                                "Không tìm thấy quản trị viên đang đăng nhập"));
-
-                User targetUser = userRepository
-                                .findById(userId)
-                                .filter(
-                                                user -> user.getStatus() != UserStatus.DELETED)
-                                .orElseThrow(
-                                                () -> new AdminUserNotFoundException(
-                                                                userId));
-
-                if (currentAdmin.getId()
-                                .equals(targetUser.getId())) {
-                        throw new SelfDeleteNotAllowedException();
-                }
-
-                String oldAvatarUrl = targetUser.getAvatarUrl();
-
-                LocalDateTime deletedAt = LocalDateTime.now();
-
-                targetUser.setStatus(
-                                UserStatus.DELETED);
-
-                targetUser.setDeletedBy(
-                                currentAdmin.getId());
-
-                targetUser.setDeletedAt(
-                                deletedAt);
-
-                targetUser.setUpdatedBy(
-                                currentAdmin.getId());
-
-                /*
-                 * Tài khoản đã xóa không còn mang trạng thái khóa.
-                 */
-                targetUser.setLockedBy(null);
-                targetUser.setLockedAt(null);
-
-                /*
-                 * Không giữ đường dẫn đến file đã xóa.
-                 */
-                targetUser.setAvatarUrl(null);
-
-                userRepository.saveAndFlush(
-                                targetUser);
-
-                deleteAvatarAfterCommit(
-                                oldAvatarUrl);
         }
 
         private AdminUserDetailResponse mapToDetailResponse(User user) {
@@ -346,18 +272,10 @@ public class AdminUserServiceImpl
                 }
 
                 try {
-                        UserStatus parsedStatus = UserStatus.valueOf(
+                        return UserStatus.valueOf(
                                         status.trim()
                                                         .toUpperCase(
                                                                         Locale.ROOT));
-
-                        if (parsedStatus != UserStatus.ACTIVE
-                                        && parsedStatus != UserStatus.LOCKED) {
-                                throw new InvalidUserListQueryException(
-                                                "Trạng thái chỉ nhận ACTIVE hoặc LOCKED");
-                        }
-
-                        return parsedStatus;
                 } catch (IllegalArgumentException exception) {
                         throw new InvalidUserListQueryException(
                                         "Trạng thái chỉ nhận ACTIVE hoặc LOCKED");
@@ -370,11 +288,6 @@ public class AdminUserServiceImpl
                         UserStatus status) {
                 return (root, query, criteriaBuilder) -> {
                         List<Predicate> predicates = new ArrayList<>();
-
-                        predicates.add(
-                                        criteriaBuilder.notEqual(
-                                                        root.get("status"),
-                                                        UserStatus.DELETED));
 
                         if (keyword != null
                                         && !keyword.isBlank()) {
@@ -443,43 +356,5 @@ public class AdminUserServiceImpl
                                 user.getLockedBy(),
                                 user.getLockedAt(),
                                 user.getUpdatedAt());
-        }
-
-        private void deleteAvatarAfterCommit(
-                        String avatarUrl) {
-                if (!StringUtils.hasText(avatarUrl)) {
-                        return;
-                }
-
-                if (TransactionSynchronizationManager
-                                .isSynchronizationActive()) {
-                        TransactionSynchronizationManager
-                                        .registerSynchronization(
-                                                        new TransactionSynchronization() {
-
-                                                                @Override
-                                                                public void afterCommit() {
-                                                                        safelyDeleteAvatar(
-                                                                                        avatarUrl);
-                                                                }
-                                                        });
-
-                        return;
-                }
-
-                safelyDeleteAvatar(avatarUrl);
-        }
-
-        private void safelyDeleteAvatar(
-                        String avatarUrl) {
-                try {
-                        avatarStorageService.deleteByUrl(
-                                        avatarUrl);
-                } catch (Exception exception) {
-                        log.error(
-                                        "Không thể xóa avatar của tài khoản đã xóa: {}",
-                                        avatarUrl,
-                                        exception);
-                }
         }
 }
