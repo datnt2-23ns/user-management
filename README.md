@@ -60,7 +60,7 @@ Dự án hỗ trợ các chức năng đăng ký, đăng nhập, quản lý hồ
 
 ### Database
 
-- MySQL hoặc MariaDB
+- MySQL
 
 ### Công cụ phát triển
 
@@ -85,6 +85,7 @@ src/main/java/org/example/usermanagement
 ├── entity
 ├── enums
 ├── exception
+├── initializer
 ├── repository
 ├── security
 ├── service
@@ -141,15 +142,13 @@ src/main/resources/application.yml
 ### 5.1. Clone repository
 
 ```bash
-git clone <repository-url>
+git clone <https://github.com/datnt2-23ns/user-management>
 cd UserManagement
 ```
 
-Thay `<repository-url>` bằng đường dẫn repository GitHub của dự án.
-
 ### 5.2. Tạo database
 
-Đăng nhập MySQL hoặc MariaDB và chạy:
+Đăng nhập MySQL và chạy:
 
 ```sql
 CREATE DATABASE user_management
