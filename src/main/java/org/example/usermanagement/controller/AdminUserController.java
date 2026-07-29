@@ -1,5 +1,10 @@
 package org.example.usermanagement.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.usermanagement.dto.request.UpdateUserRoleRequest;
@@ -27,9 +32,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/admin/users")
 @RequiredArgsConstructor
+@Tag(name = "Quản trị người dùng", description = "Các chức năng dành riêng cho quản trị viên")
+@SecurityRequirement(name = "bearerAuth")
 public class AdminUserController {
 
         private final AdminUserService adminUserService;
+
+        @Operation(summary = "Xem danh sách tài khoản", description = "Hỗ trợ tìm kiếm, lọc, sắp xếp và phân trang")
 
         @GetMapping
         @PreAuthorize("hasRole('ADMIN')")
@@ -53,6 +62,8 @@ public class AdminUserController {
                                                 direction));
         }
 
+        @Operation(summary = "Xem chi tiết tài khoản")
+
         @GetMapping("/{userId}")
         @PreAuthorize("hasRole('ADMIN')")
         public ResponseEntity<AdminUserDetailResponse> getUserById(
@@ -61,6 +72,8 @@ public class AdminUserController {
                 return ResponseEntity.ok(
                                 adminUserService.getUserById(userId));
         }
+
+        @Operation(summary = "Khóa hoặc mở khóa tài khoản")
 
         @PatchMapping("/{userId}/status")
         @PreAuthorize("hasRole('ADMIN')")
@@ -78,6 +91,8 @@ public class AdminUserController {
                                                 request));
         }
 
+        @Operation(summary = "Xóa tài khoản")
+
         @DeleteMapping("/{userId}")
         @PreAuthorize("hasRole('ADMIN')")
         public ResponseEntity<Void> deleteUser(
@@ -93,6 +108,16 @@ public class AdminUserController {
                 return ResponseEntity.noContent().build();
         }
 
+        @Operation(summary = "Thay đổi vai trò tài khoản", description = "Nâng USER thành ADMIN hoặc hạ ADMIN thành USER")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "Thay đổi vai trò thành công"),
+                        @ApiResponse(responseCode = "400", description = "Vai trò yêu cầu không hợp lệ"),
+                        @ApiResponse(responseCode = "401", description = "Chưa đăng nhập hoặc token không hợp lệ"),
+                        @ApiResponse(responseCode = "403", description = "Không có quyền quản trị"),
+                        @ApiResponse(responseCode = "404", description = "Không tìm thấy tài khoản"),
+                        @ApiResponse(responseCode = "409", description = "Không thể hạ Admin đang hoạt động cuối cùng"),
+                        @ApiResponse(responseCode = "500", description = "Lỗi hệ thống")
+        })
         @PatchMapping("/{userId}/role")
         @PreAuthorize("hasRole('ADMIN')")
         public ResponseEntity<AdminUserRoleResponse> updateUserRole(
