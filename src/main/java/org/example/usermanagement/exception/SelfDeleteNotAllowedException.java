@@ -5,6 +5,5 @@ public class SelfDeleteNotAllowedException
 
     public SelfDeleteNotAllowedException() {
         super(
-                "Quản trị viên không thể tự xóa tài khoản của mình");
     }
 }
