@@ -274,7 +274,10 @@ public class AdminUserServiceImpl implements AdminUserService {
                                 user.getDeletedBy(),
                                 user.getDeletedAt(),
                                 user.getCreatedAt(),
-                                user.getUpdatedAt());
+                                user.getUpdatedAt(),
+                                resolveUserFullName(user.getUpdatedBy()),
+                                resolveUserFullName(user.getLockedBy()),
+                                resolveUserFullName(user.getDeletedBy()));
         }
 
         private AdminUserStatusResponse mapToStatusResponse(User user) {
@@ -287,7 +290,9 @@ public class AdminUserServiceImpl implements AdminUserService {
                                 user.getUpdatedBy(),
                                 user.getLockedBy(),
                                 user.getLockedAt(),
-                                user.getUpdatedAt());
+                                user.getUpdatedAt(),
+                                resolveUserFullName(user.getUpdatedBy()),
+                                resolveUserFullName(user.getLockedBy()));
         }
 
         private AdminUserRoleResponse mapToRoleResponse(User user) {
@@ -298,7 +303,8 @@ public class AdminUserServiceImpl implements AdminUserService {
                                 user.getRole(),
                                 user.getStatus(),
                                 user.getUpdatedBy(),
-                                user.getUpdatedAt());
+                                user.getUpdatedAt(),
+                                resolveUserFullName(user.getUpdatedBy()));
         }
 
         private String normalizeKeyword(String keyword) {
@@ -490,5 +496,15 @@ public class AdminUserServiceImpl implements AdminUserService {
                                         avatarUrl,
                                         exception);
                 }
+        }
+
+        private String resolveUserFullName(Long userId) {
+                if (userId == null) {
+                        return null;
+                }
+
+                return userRepository.findById(userId)
+                                .map(User::getFullName)
+                                .orElse("Tài khoản không còn tồn tại");
         }
 }

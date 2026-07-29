@@ -209,9 +209,9 @@ function renderUserDetail(user) {
 
   setText("detail-updated-at", formatDateTime(user.updatedAt));
 
-  setText("detail-updated-by", user.updatedBy);
+  setText("detail-updated-by", user.updatedByName || user.updatedBy);
 
-  setText("detail-locked-by", user.lockedBy);
+  setText("detail-locked-by", user.lockedByName || user.lockedBy);
 
   setText("detail-locked-at", formatDateTime(user.lockedAt));
 

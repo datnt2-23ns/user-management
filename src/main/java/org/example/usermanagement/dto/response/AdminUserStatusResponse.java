@@ -6,13 +6,15 @@ import org.example.usermanagement.enums.UserStatus;
 import java.time.LocalDateTime;
 
 public record AdminUserStatusResponse(
-                Long id,
-                String fullName,
-                String email,
-                Role role,
-                UserStatus status,
-                Long updatedBy,
-                Long lockedBy,
-                LocalDateTime lockedAt,
-                LocalDateTime updatedAt) {
+        Long id,
+        String fullName,
+        String email,
+        Role role,
+        UserStatus status,
+        Long updatedBy,
+        Long lockedBy,
+        LocalDateTime lockedAt,
+        LocalDateTime updatedAt,
+        String updatedByName,
+        String lockedByName) {
 }
