@@ -47,3 +47,13 @@ app:
     avatar-dir: ${AVATAR_UPLOAD_DIR:uploads/avatars}
     avatar-url-prefix: /uploads/avatars
     avatar-max-size: 2097152
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: method
+    display-request-duration: true

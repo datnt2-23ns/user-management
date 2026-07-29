@@ -62,7 +62,11 @@ public class SecurityConfig {
                                                                 "/components/**",
                                                                 "/uploads/**",
                                                                 "/favicon.ico",
-                                                                "/error")
+                                                                "/error",
+                                                                "/swagger-ui.html",
+                                                                "/swagger-ui/**",
+                                                                "/v3/api-docs",
+                                                                "/v3/api-docs/**")
                                                 .permitAll()
 
                                                 .requestMatchers(
@@ -71,17 +75,14 @@ public class SecurityConfig {
                                                                 "/api/auth/login")
                                                 .permitAll()
 
-                                                .requestMatchers(
-                                                                "/api/admin/**")
+                                                .requestMatchers("/api/admin/**")
                                                 .hasRole("ADMIN")
 
                                                 .requestMatchers(
                                                                 "/api/users/me",
                                                                 "/api/users/me/**",
                                                                 "/api/profile/**")
-                                                .hasAnyRole(
-                                                                "USER",
-                                                                "ADMIN")
+                                                .hasAnyRole("USER", "ADMIN")
 
                                                 .anyRequest()
                                                 .authenticated())

@@ -19,13 +19,20 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.example.usermanagement.dto.request.ChangePasswordRequest;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@Tag(name = "Hồ sơ người dùng", description = "Xem và cập nhật thông tin của tài khoản đang đăng nhập")
+@SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
         private final UserService userService;
+
+        @Operation(summary = "Xem hồ sơ cá nhân")
 
         @GetMapping("/me")
         @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
@@ -37,6 +44,8 @@ public class UserController {
                                 userService.getCurrentUserProfile(
                                                 userDetails.getUsername()));
         }
+
+        @Operation(summary = "Cập nhật hồ sơ cá nhân")
 
         @PutMapping("/me")
         @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
@@ -52,6 +61,8 @@ public class UserController {
                                                 request));
         }
 
+        @Operation(summary = "Cập nhật ảnh đại diện")
+
         @PutMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
         @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
         public ResponseEntity<UserProfileResponse> updateCurrentUserAvatar(
@@ -65,6 +76,8 @@ public class UserController {
                                                 userDetails.getUsername(),
                                                 file));
         }
+
+        @Operation(summary = "Đổi mật khẩu")
 
         @PutMapping("/me/password")
         @PreAuthorize("hasAnyRole('USER', 'ADMIN')")

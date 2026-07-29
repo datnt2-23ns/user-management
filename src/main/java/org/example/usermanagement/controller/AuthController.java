@@ -13,13 +13,18 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Tag(name = "Xác thực", description = "Đăng ký và đăng nhập tài khoản")
 public class AuthController {
 
         private final AuthService authService;
+
+        @Operation(summary = "Đăng ký tài khoản", description = "Tạo tài khoản mới với vai trò USER và trạng thái ACTIVE")
 
         @PostMapping("/register")
         public ResponseEntity<RegisterResponse> register(
@@ -30,6 +35,8 @@ public class AuthController {
                                 .status(HttpStatus.CREATED)
                                 .body(response);
         }
+
+        @Operation(summary = "Đăng nhập", description = "Xác thực email, mật khẩu và trả về JWT access token")
 
         @PostMapping("/login")
         public ResponseEntity<LoginResponse> login(
